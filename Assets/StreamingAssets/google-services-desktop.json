@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "175641768296",
+    "project_id": "leave-your-mark-a3b41",
+    "storage_bucket": "leave-your-mark-a3b41.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:175641768296:android:383400b55068024380e6dd",
+        "android_client_info": {
+          "package_name": "com.RansomSoft.Lym"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "175641768296-hm0qo4dgt2ftjs3pksh5aasudvoskamf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2TWkUVv6KBspAsn8NyRHAQDgOyiG6eG0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "175641768296-hm0qo4dgt2ftjs3pksh5aasudvoskamf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
