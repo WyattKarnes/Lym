@@ -5,7 +5,7 @@ using Firebase;
 using Firebase.Auth;
 using TMPro;
 
-public class AuthManager : MonoBehaviour
+public class FirebaseManager : MonoBehaviour
 {
 
     // Firebase variables
@@ -29,8 +29,12 @@ public class AuthManager : MonoBehaviour
     public TMP_InputField passwordRegisterVerifyField;
     public TMP_Text warningRegisterText;
 
+    // User Page Fields
+
     private void Awake()
     {
+        // We are issuing an asynchronous task to check dependencies so Firebase can work. 
+
         FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task =>
         {
             dependencyStatus = task.Result;
@@ -116,6 +120,13 @@ public class AuthManager : MonoBehaviour
             Debug.LogFormat("User signed in successfully: {0} ({1})", user.DisplayName, user.Email);
             warningLoginText.text = "";
             confirmLoginText.text = "Logged In";
+
+            yield return new WaitForSeconds(2);
+
+            // Swap to the user data view
+
+            UIManager.instance.UserDataScreen();
+            confirmLoginText.text = "";
         }
     }
 
