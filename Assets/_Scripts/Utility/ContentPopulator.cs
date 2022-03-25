@@ -55,7 +55,7 @@ namespace Lym
                 Button tempButton = temp.GetComponent<Button>();
 
                 // link up its event to the MessageEditorUIManager
-                tempButton.onClick.AddListener(() => MessageEditorUIManager.instance.UpdateLabel(tempText));
+                tempButton.onClick.AddListener(() => MessageEditorView.instance.UpdateLabel(tempText));
             }
 
         }
@@ -101,7 +101,7 @@ namespace Lym
                 Button tempButton = temp.GetComponent<Button>();            
 
                 // link up its event to the MessageEditorUIManager
-                tempButton.onClick.AddListener(() => MessageEditorUIManager.instance.UpdateLabel(tempText));
+                tempButton.onClick.AddListener(() => MessageEditorView.instance.UpdateLabel(tempText));
 
             }
         }
@@ -130,7 +130,7 @@ namespace Lym
                 Button tempButton = temp.GetComponent<Button>();
 
                 // link up its event to the MessageEditorUIManager
-                tempButton.onClick.AddListener(() => MessageEditorUIManager.instance.UpdateLabel(tempText));
+                tempButton.onClick.AddListener(() => MessageEditorView.instance.UpdateLabel(tempText));
             }
         }
 

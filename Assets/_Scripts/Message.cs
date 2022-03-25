@@ -1,7 +1,7 @@
 namespace Lym {
     public class Message
     {
-        public int Id { get; set; }
+        public string id { get; set; }
 
         public string messageText;
 
@@ -15,6 +15,8 @@ namespace Lym {
         
         public Message(string messageText, int gesture)
         {
+            // the id should be userID + the number of messages the user has.
+            id = FirebaseManager.instance.GetUserID() + "-MSG-" + 0;
             this.messageText = messageText;
             this.gesture = gesture;
         }

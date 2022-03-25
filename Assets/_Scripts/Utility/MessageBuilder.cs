@@ -19,7 +19,7 @@ namespace Lym {
         string wordText1 = "";
         string wordText2 = "";
         string conjunctionText = "";
-        int gesture = 0;
+        int gesture = -1;
 
 
         string messageText;
@@ -44,9 +44,16 @@ namespace Lym {
 
             messageText = templateText1 + " " + conjunctionText + " " + templateText2;
 
-            Message message = new Message(messageText, gesture);
+            // remove all carriage return chars so that the text displays correctly
+            for (int i = 0; i < messageText.Length; i++)
+            {
+                if (messageText[i].Equals('\r'))
+                {               
+                    messageText = messageText.Remove(i, 1);
+                }
+            }
 
-            Debug.Log(messageText);
+            MessageEditorView.instance.UpdateMessageDisplay(messageText);           
         }
 
         public void UpdateMessage(string text, string context)
@@ -55,32 +62,34 @@ namespace Lym {
             // populate fields based on the currently open overlay (context)
             switch (context)
             {
-                case "t1":
-                    Debug.Log("The context is template 1, which has been updated to say " + text);
+                case "t1":                  
                     templateText1 = text;
                     break;
 
-                case "t2":
-                    Debug.Log("The context is template 2, which has been updated to say " + text);
+                case "t2":                   
                     templateText2 = text;
                     break;
 
-                case "w1":
-                    Debug.Log("The context is words 1, which has been updated to say " + text);                                 
+                case "w1":                              
                     wordText1 = text;
                     break;
 
                 case "w2":
-                    Debug.Log("The context is words 2, which has been updated to say " + text);
                     wordText2 = text;
                     break;
 
                 case "c":
-                    Debug.Log("The context is conjunction, which has been updated to say " + text);
                     conjunctionText = text;
                     break;
             }       
 
+        }
+
+        public Message GenerateMessage()
+        {
+            Message message = new Message(messageText, gesture);
+
+            return message;
         }
     }
 

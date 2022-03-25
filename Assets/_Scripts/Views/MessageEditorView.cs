@@ -6,11 +6,12 @@ using TMPro;
 namespace Lym
 {
 
-    public class MessageEditorUIManager : MonoBehaviour
+    public class MessageEditorView : MonoBehaviour
     {
-        public static MessageEditorUIManager instance;
+        public static MessageEditorView instance;
 
         // GameObjects that are active/not active based on template choice
+        [Header("Optional UI References")]
         public GameObject gestureButton;
         public GameObject gestureLabel;
 
@@ -24,10 +25,15 @@ namespace Lym
         public GameObject words2Label;
 
         // Temporary selection screens that will overlay instead of replace the current UI
+        [Header("Overlay References")]
         public GameObject templateSelectionUI;
         public GameObject wordSelectionUI;
         public GameObject conjunctionSelectionUI;
         public GameObject gestureSelectionUI;
+        public GameObject confirmationOverlay;
+
+        [Header("Changeable Text References")]
+        public TextMeshProUGUI messageDisplay;
 
         // The button label to modify when a selection is made.
         private TextMeshProUGUI labelToChange;
@@ -177,6 +183,17 @@ namespace Lym
 
 
 
+        public void OpenConfirmationOverlay()
+        {
+            confirmationOverlay.SetActive(true);
+        }
+
+        public void CloseConfirmationOverlay()
+        {
+            confirmationOverlay.SetActive(false);
+        }
+
+
         public void SetContext(string context)
         {
             choiceContext = context;
@@ -193,13 +210,21 @@ namespace Lym
             CloseOverlays();
         }
 
+        public void UpdateMessageDisplay(string text)
+        {
+            messageDisplay.SetText(text);
+            messageDisplay.ForceMeshUpdate();
+        }
+
         public void CloseOverlays()
         {
             CloseTemplateOverlay();
             CloseConjunctionOverlay();
             CloseWordsOverlay();
             CloseGestureOverlay();
+            CloseConfirmationOverlay();
         }
+
 
     }
 
