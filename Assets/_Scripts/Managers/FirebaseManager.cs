@@ -125,7 +125,7 @@ public class FirebaseManager : MonoBehaviour
 
             // Swap to the user data view
 
-            UIManager.instance.UserDataScreen();
+            UIManager.instance.UserHomepageScreen();
             confirmLoginText.text = "";
         }
     }

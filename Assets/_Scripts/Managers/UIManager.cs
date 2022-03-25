@@ -7,11 +7,13 @@ public class UIManager : MonoBehaviour
     // Make a singleton
     public static UIManager instance;
 
-    //Screen object variables
+    // Screen object variables
     public GameObject loginUI;
     public GameObject registerUI;
-    public GameObject userDataUI;
+    public GameObject userHomepageUI;
+    public GameObject messageEditorUI;
 
+    // Set up singleton
     private void Awake()
     {
         if (instance == null)
@@ -26,20 +28,32 @@ public class UIManager : MonoBehaviour
     }
 
     // Functions to change the login screen UI
-    public void LoginScreen() //Back button
+
+    // Back Button
+    public void LoginScreen()
     {
         loginUI.SetActive(true);
         registerUI.SetActive(false);
     }
-    public void RegisterScreen() // Regester button
+
+    // Register Button
+    public void RegisterScreen() 
     {
         loginUI.SetActive(false);
         registerUI.SetActive(true);
     }
 
-    public void UserDataScreen()
+    // On Successful login
+    public void UserHomepageScreen()
     {
-        userDataUI.SetActive(true);
+        userHomepageUI.SetActive(true);
         loginUI.SetActive(false);
+    }
+
+    // Create Message Button
+    public void MessageEditorScreen()
+    {
+        messageEditorUI.SetActive(true);
+        userHomepageUI.SetActive(false);
     }
 }
