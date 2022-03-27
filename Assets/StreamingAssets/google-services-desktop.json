@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "175641768296",
+    "firebase_url": "https://leave-your-mark-a3b41-default-rtdb.firebaseio.com",
     "project_id": "leave-your-mark-a3b41",
     "storage_bucket": "leave-your-mark-a3b41.appspot.com"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "175641768296-preshc8i34jqgak9c5nf3kf8spb94jmv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.RansomSoft.Lym",
+            "certificate_hash": "03c6edb43a9f28ba85ef453a453b79d0c6ef095e"
+          }
+        },
         {
           "client_id": "175641768296-hm0qo4dgt2ftjs3pksh5aasudvoskamf.apps.googleusercontent.com",
           "client_type": 3

@@ -49,7 +49,7 @@ namespace Lym
                 // give the button label the text from 'lines'
                 TextMeshProUGUI tempText = temp.GetComponentInChildren<TextMeshProUGUI>();
 
-                tempText.text = lines[i];
+                tempText.text = lines[i].Trim('\r');
 
                 // grab the button component from temp
                 Button tempButton = temp.GetComponent<Button>();
@@ -95,7 +95,7 @@ namespace Lym
                 // give the button label the text from 'lines'
                 TextMeshProUGUI tempText = temp.GetComponentInChildren<TextMeshProUGUI>();
 
-                tempText.text = lines[i];
+                tempText.text = lines[i].Trim('\r');
 
                 // grab the button component from temp
                 Button tempButton = temp.GetComponent<Button>();            
@@ -124,7 +124,7 @@ namespace Lym
                 // give the button label the text from 'lines'
                 TextMeshProUGUI tempText = temp.GetComponentInChildren<TextMeshProUGUI>();
 
-                tempText.text = lines[i];
+                tempText.text = lines[i].Trim('\r');
 
                 // grab the button component from temp
                 Button tempButton = temp.GetComponent<Button>();

@@ -6,10 +6,10 @@ namespace Lym
 
     public class User
     {
-        public int id { get; private set; }
+        public string id { get; private set; }
         public List<Message> messages { get; private set; }
 
-        public User(int id)
+        public User(string id)
         {
             this.id = id;
             messages = new List<Message>();

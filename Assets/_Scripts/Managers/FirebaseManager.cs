@@ -2,12 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Firebase;
+using Firebase.Database;
 using Firebase.Auth;
 using TMPro;
 
 namespace Lym
 {
-
     public class FirebaseManager : MonoBehaviour
     {
         public static FirebaseManager instance;
@@ -16,7 +16,8 @@ namespace Lym
         [Header("Firebase")]
         public DependencyStatus dependencyStatus;
         public FirebaseAuth auth;
-        public FirebaseUser user;
+        public FirebaseUser firebaseUser;
+        public DatabaseReference DBReference;
 
         // Login UI Variables
         [Header("Login")]
@@ -34,6 +35,8 @@ namespace Lym
         public TMP_Text warningRegisterText;
 
         // User Page Fields
+        public User userData;
+
 
         private void Awake()
         {
@@ -75,17 +78,38 @@ namespace Lym
         {
             Debug.Log("Setting up Firebase Auth");
             auth = FirebaseAuth.DefaultInstance;
+            DBReference = FirebaseDatabase.DefaultInstance.RootReference;
         }
+
+
+
+
+        #region Buttons
 
         public void LoginButton()
         {
             StartCoroutine(Login(emailLoginField.text, passwordLoginField.text));
         }
 
+        public void LogoutButton()
+        {
+            auth.SignOut();
+            UIManager.instance.LoginScreen();
+            //clear registration fields
+            //clear login fields
+        }
+
         public void RegisterButton()
         {
             StartCoroutine(Register(emailRegisterField.text, passwordRegisterField.text, usernameRegisterField.text));
         }
+
+        #endregion
+
+
+
+
+        #region Login Functions
 
         private IEnumerator Login(string email, string password)
         {
@@ -134,8 +158,8 @@ namespace Lym
             {
                 // The user is now logged in
                 // Get the result
-                user = LoginTask.Result;
-                Debug.LogFormat("User signed in successfully: {0} ({1})", user.DisplayName, user.Email);
+                firebaseUser = LoginTask.Result;
+                Debug.LogFormat("User signed in successfully: {0} ({1})", firebaseUser.DisplayName, firebaseUser.Email);
                 warningLoginText.text = "";
                 confirmLoginText.text = "Logged In";
 
@@ -145,7 +169,37 @@ namespace Lym
 
                 UIManager.instance.UserHomepageScreen();
                 confirmLoginText.text = "";
+
+                StartCoroutine(SetUpUser());
+
+
             }
+        }
+
+        private IEnumerator SetUpUser()
+        {
+            userData = new User(firebaseUser.UserId);
+
+            var userMessagesTask = DBReference.Child("users").Child(firebaseUser.UserId).Child("messages").GetValueAsync();
+
+            yield return new WaitUntil(predicate: () => userMessagesTask.IsCompleted);
+
+            if (userMessagesTask.Exception != null)
+            {
+                Debug.LogWarning(message: $"Failed to register task with {userMessagesTask.Exception}");
+            }
+            else
+            {
+                foreach(DataSnapshot snap in userMessagesTask.Result.Children)
+                {
+                    Debug.Log(snap.GetRawJsonValue() + "From database");
+                    Message m = JsonUtility.FromJson<Message>(snap.GetRawJsonValue());
+                    Debug.Log(snap.GetRawJsonValue() + "After conversion");
+                }
+            }
+
+           
+
         }
 
         private IEnumerator Register(string email, string password, string username)
@@ -209,15 +263,15 @@ namespace Lym
 
                     // User has been created
                     // Get the result from Firebase
-                    user = RegisterTask.Result;
+                    firebaseUser = RegisterTask.Result;
 
-                    if (user != null)
+                    if (firebaseUser != null)
                     {
                         // Create a user profile and set the username
                         UserProfile profile = new UserProfile { DisplayName = username };
 
                         // Call the Firebase auth update user profile function and pass the profile with the username
-                        var ProfileTask = user.UpdateUserProfileAsync(profile);
+                        var ProfileTask = firebaseUser.UpdateUserProfileAsync(profile);
 
                         // Wait for the task to complete
                         yield return new WaitUntil(predicate: () => ProfileTask.IsCompleted);
@@ -244,26 +298,109 @@ namespace Lym
             }
         }
 
+        #endregion
+
+
+
+        // update the username in the authorization data
+        private IEnumerator UpdateUsernameAuth(string username)
+        {
+            // Create a user profile and set the username
+            UserProfile profile = new UserProfile { DisplayName=username };
+
+            // Update the Firebase user auth
+            var profileTask = firebaseUser.UpdateUserProfileAsync(profile);
+
+            // Wait for the task to complete
+            yield return new WaitUntil(predicate: () => profileTask.IsCompleted);   
+
+            if(profileTask.Exception != null)
+            {
+                Debug.LogWarning(message: $"Failed to register task with {profileTask.Exception}");
+            } else
+            {
+                // Auth username is now updated
+            }
+        }
+
+        // update the users display name in the database
+        private IEnumerator UpdateUsernameDatabase(string username)
+        {
+            var DBTask = DBReference.Child("users").Child(firebaseUser.UserId).Child("username").SetValueAsync(username);
+
+            yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+            if(DBTask.Exception != null)
+            {
+                Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+            } else
+            {
+                // Database username is now updated
+            }
+        }
+
+
+
+        // Sends a user's message to the database
+        private IEnumerator UpdateMessageDatabase(Message msg)
+        {
+            var DBTask = DBReference.Child("users").Child(firebaseUser.UserId).Child("messages").Child(msg.id).SetRawJsonValueAsync(msg.ToString());
+
+            yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+            if (DBTask.Exception != null)
+            {
+                Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+            }
+            else
+            {
+                // Database username is now updated
+            }
+        }
+
+
+
 
         public string GetUsername()
         {
-            if (user.DisplayName.Equals(""))
+            if (firebaseUser.DisplayName.Equals(""))
             {
-                string trimmedEmail = user.Email.Substring(0, user.Email.IndexOf('@'));
+                string trimmedEmail = firebaseUser.Email.Substring(0, firebaseUser.Email.IndexOf('@'));
                 return trimmedEmail;
             } else
             {
-                return user.DisplayName;
+                return firebaseUser.DisplayName;
             }
             
         }
 
         public string GetUserID()
         {
-            return user.UserId;
+            return firebaseUser.UserId;
         }
 
         // functions to publish a message to the database
+        public void PublishMessage()
+        {
+            Message msg = MessageBuilder.instance.GenerateMessage();
+
+            if(msg != null)
+            {
+
+                Debug.Log(msg.ToString());
+                StartCoroutine(UpdateMessageDatabase(msg));
+
+            } else
+            {
+                Debug.Log("Message failed to generate.");
+            }
+
+            
+
+            
+        }
+
+        
 
     }
 

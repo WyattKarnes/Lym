@@ -213,7 +213,6 @@ namespace Lym
         public void UpdateMessageDisplay(string text)
         {
             messageDisplay.SetText(text);
-            messageDisplay.ForceMeshUpdate();
         }
 
         public void CloseOverlays()
@@ -224,7 +223,6 @@ namespace Lym
             CloseGestureOverlay();
             CloseConfirmationOverlay();
         }
-
 
     }
 
