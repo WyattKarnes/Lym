@@ -102,7 +102,6 @@ namespace Lym {
                 float lng = LocationServicesUtility.instance.longitude;
 
                 Message message = new Message(messageText, gesture, lat, lng);
-                
                 return message;
             }
 

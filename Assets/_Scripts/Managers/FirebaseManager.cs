@@ -82,8 +82,6 @@ namespace Lym
         }
 
 
-
-
         #region Buttons
 
         public void LoginButton()
@@ -105,9 +103,6 @@ namespace Lym
         }
 
         #endregion
-
-
-
 
         #region Login Functions
 
@@ -163,42 +158,52 @@ namespace Lym
                 warningLoginText.text = "";
                 confirmLoginText.text = "Logged In";
 
-                yield return new WaitForSeconds(2);
+                //yield return new WaitForSeconds(2);
 
-                // Swap to the user data view
-
-                UIManager.instance.UserHomepageScreen();
-                confirmLoginText.text = "";
-
+                // set up the userData object 
                 StartCoroutine(SetUpUser());
 
-
+                confirmLoginText.text = "";
             }
         }
 
+        /// <summary>
+        /// Get a list of all of the User's messages from the database
+        /// </summary>
+        /// <returns></returns>
         private IEnumerator SetUpUser()
         {
+            // create the user object (this is just to keep a local reference so we can query the database less)
             userData = new User(firebaseUser.UserId);
 
+            // create an asynchronus task to retrieve all messages that the user has
             var userMessagesTask = DBReference.Child("users").Child(firebaseUser.UserId).Child("messages").GetValueAsync();
 
             yield return new WaitUntil(predicate: () => userMessagesTask.IsCompleted);
 
             if (userMessagesTask.Exception != null)
             {
+                // failed to complete task
                 Debug.LogWarning(message: $"Failed to register task with {userMessagesTask.Exception}");
             }
             else
             {
+                // task succeeded
+
+                // loop over all of the user's messages
                 foreach(DataSnapshot snap in userMessagesTask.Result.Children)
                 {
                     Debug.Log(snap.GetRawJsonValue() + "From database");
                     Message m = JsonUtility.FromJson<Message>(snap.GetRawJsonValue());
-                    Debug.Log(snap.GetRawJsonValue() + "After conversion");
+                    userData.AddMessage(m);
+                    //Debug.Log(snap.GetRawJsonValue() + "After conversion");
                 }
+
+                PopupUtility.instance.DisplayPopup("Loaded " + userData.messages.Count + " messages.");
             }
 
-           
+            //go to the home screen
+            UIManager.instance.UserHomepageScreen();
 
         }
 
@@ -301,8 +306,11 @@ namespace Lym
         #endregion
 
 
-
-        // update the username in the authorization data
+        /// <summary>
+        /// Update a user's displayname in the authorization system
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
         private IEnumerator UpdateUsernameAuth(string username)
         {
             // Create a user profile and set the username
@@ -323,7 +331,11 @@ namespace Lym
             }
         }
 
-        // update the users display name in the database
+        /// <summary>
+        /// Update a user's displayname in the database
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
         private IEnumerator UpdateUsernameDatabase(string username)
         {
             var DBTask = DBReference.Child("users").Child(firebaseUser.UserId).Child("username").SetValueAsync(username);
@@ -341,7 +353,11 @@ namespace Lym
 
 
 
-        // Sends a user's message to the database
+        /// <summary>
+        /// Upload user message to database.
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
         private IEnumerator UpdateMessageDatabase(Message msg)
         {
             var DBTask = DBReference.Child("users").Child(firebaseUser.UserId).Child("messages").Child(msg.id).SetRawJsonValueAsync(msg.ToString());
@@ -351,16 +367,21 @@ namespace Lym
             if (DBTask.Exception != null)
             {
                 Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+                PopupUtility.instance.DisplayPopup("Message failed to register with the database. Please try again later.");
             }
             else
             {
                 // Database username is now updated
+                PopupUtility.instance.DisplayPopup("Your message was successfully uploaded.");
             }
         }
 
 
 
-
+        /// <summary>
+        /// Retrieve the display name of a user, or most of their email if display name not available.
+        /// </summary>
+        /// <returns></returns>
         public string GetUsername()
         {
             if (firebaseUser.DisplayName.Equals(""))
@@ -374,12 +395,18 @@ namespace Lym
             
         }
 
+        /// <summary>
+        /// Fetch a user's unique ID
+        /// </summary>
+        /// <returns></returns>
         public string GetUserID()
         {
             return firebaseUser.UserId;
         }
 
-        // functions to publish a message to the database
+        /// <summary>
+        /// Attempt to generate a message and then begin upload to database. Requires location services to be running. 
+        /// </summary>
         public void PublishMessage()
         {
             Message msg = MessageBuilder.instance.GenerateMessage();
@@ -393,6 +420,7 @@ namespace Lym
             } else
             {
                 Debug.Log("Message failed to generate.");
+                PopupUtility.instance.DisplayPopup("Could not publish message, location could not be retrieved.");
             }
 
             

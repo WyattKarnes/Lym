@@ -19,7 +19,7 @@ namespace Lym {
         public Message(string messageText, int gesture, float latitude, float longitude)
         {
             // the id should be userID + the number of messages the user has.
-            this.id = FirebaseManager.instance.GetUserID() + "-MSG-" + 0;
+            this.id = FirebaseManager.instance.GetUserID() + "-MSG-" + FirebaseManager.instance.userData.messages.Count;
             this.messageText = messageText;
             this.gesture = gesture;
 
