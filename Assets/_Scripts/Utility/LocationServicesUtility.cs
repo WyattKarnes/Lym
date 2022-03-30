@@ -131,8 +131,9 @@ using UnityEngine;
             else
             {
                 Debug.Log("GPS Working");
-                Debug.Log(Input.location.lastData.latitude);
-                Debug.Log(Input.location.lastData.longitude);
+                //Debug.Log(Input.location.lastData.latitude);
+                //Debug.Log(Input.location.lastData.longitude);
+                
                 // Access Granted
 
             }

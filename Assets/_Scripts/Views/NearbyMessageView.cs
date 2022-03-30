@@ -14,6 +14,8 @@ namespace Lym
 
         public GameObject messageListPrefab;
 
+        public List<Message> messages = new List<Message>();
+
         private void Awake()
         {
             if (instance == null)
@@ -26,6 +28,11 @@ namespace Lym
             }
         }
 
+        public void ClearMessages()
+        {
+            messages.Clear();
+        }
+
         public void ClearMessageView()
         {
             foreach (Transform temp in messageList)
@@ -36,11 +43,23 @@ namespace Lym
             }
         }
 
+        public void AddMessage(Message msg)
+        {
+            messages.Add(msg);
+            PopulateMessageView();
+        }
+
         public void PopulateMessageView()
         {
-            // request the necessary data from Firebase
+            // go over messages data, generating MessageButtons on the way
+            foreach (Message m in messages)
+            {
+                // spawn a message prefab
+                GameObject temp = Instantiate(messageListPrefab, messageList);
 
-            // go over that data, generating MessageButtons on the way
+                // populate the pieces of the message prefab
+                temp.GetComponent<MessageButton>().Init(m);
+            }
         }
 
     }

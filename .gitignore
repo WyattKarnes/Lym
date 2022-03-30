@@ -73,6 +73,7 @@ crashlytics-build.properties
 
 # Custom Ignores
 
+Assets/Graphics/
 Assets/TextMesh Pro/
 Assets/Editor Default Resources/
 Assets/Firebase/

@@ -54,7 +54,7 @@ namespace Lym
             userHomepageUI.SetActive(true);
             HomepageView.instance.SetWelcomeText();
             HomepageView.instance.ClearMessageView();
-            HomepageView.instance.PopulateMessageView();
+            HomepageView.instance.FetchMessages();
         }
 
         // Search for messages screen
@@ -63,7 +63,7 @@ namespace Lym
             CloseScreens();
             nearbyMessagesUI.SetActive(true);
             NearbyMessageView.instance.ClearMessageView();
-            NearbyMessageView.instance.PopulateMessageView();
+            //NearbyMessageView.instance.PopulateMessageView();
         }
 
         // Create Message Button
@@ -81,6 +81,7 @@ namespace Lym
             registerUI.SetActive(false);
             userHomepageUI.SetActive(false);
             nearbyMessagesUI.SetActive(false);
+            messageEditorUI.SetActive(false);
         }
     }
 

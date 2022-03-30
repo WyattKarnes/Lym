@@ -4,6 +4,8 @@ using UnityEngine;
 using Firebase;
 using Firebase.Database;
 using Firebase.Auth;
+using com.draconianmarshmallows.geofire;
+using com.draconianmarshmallows.geofire.core;
 using TMPro;
 
 namespace Lym
@@ -17,7 +19,10 @@ namespace Lym
         public DependencyStatus dependencyStatus;
         public FirebaseAuth auth;
         public FirebaseUser firebaseUser;
-        public DatabaseReference DBReference;
+        public DatabaseReference mainDBReference;
+        public DatabaseReference geofireDBReference;
+        public GeoFire geoFire;
+        public GeoQuery query;
 
         // Login UI Variables
         [Header("Login")]
@@ -36,7 +41,6 @@ namespace Lym
 
         // User Page Fields
         public User userData;
-
 
         private void Awake()
         {
@@ -59,26 +63,28 @@ namespace Lym
 
                 if (dependencyStatus == DependencyStatus.Available)
                 {
-                // If Firebase can be initialized on this device: 
-                InitializeFirebase();
+                    // If Firebase can be initialized on this device: 
+                    InitializeFirebase();
 
                 }
                 else
                 {
-                    Debug.LogError("Could not resolve all Firebase dependencies: " + dependencyStatus);           
+                    Debug.LogError("Could not resolve all Firebase dependencies: " + dependencyStatus);
                 }
 
 
             });
 
-            
+
         }
 
         private void InitializeFirebase()
         {
             Debug.Log("Setting up Firebase Auth");
             auth = FirebaseAuth.DefaultInstance;
-            DBReference = FirebaseDatabase.DefaultInstance.RootReference;
+            mainDBReference = FirebaseDatabase.DefaultInstance.RootReference;
+            geofireDBReference = mainDBReference.Child("geofire");
+            geoFire = new GeoFire(geofireDBReference);
         }
 
 
@@ -161,7 +167,7 @@ namespace Lym
                 //yield return new WaitForSeconds(2);
 
                 // set up the userData object 
-                StartCoroutine(SetUpUser());
+                SetUpUser();
 
                 confirmLoginText.text = "";
             }
@@ -171,36 +177,11 @@ namespace Lym
         /// Get a list of all of the User's messages from the database
         /// </summary>
         /// <returns></returns>
-        private IEnumerator SetUpUser()
+        private void SetUpUser()
         {
             // create the user object (this is just to keep a local reference so we can query the database less)
             userData = new User(firebaseUser.UserId);
 
-            // create an asynchronus task to retrieve all messages that the user has
-            var userMessagesTask = DBReference.Child("users").Child(firebaseUser.UserId).Child("messages").GetValueAsync();
-
-            yield return new WaitUntil(predicate: () => userMessagesTask.IsCompleted);
-
-            if (userMessagesTask.Exception != null)
-            {
-                // failed to complete task
-                Debug.LogWarning(message: $"Failed to register task with {userMessagesTask.Exception}");
-            }
-            else
-            {
-                // task succeeded
-
-                // loop over all of the user's messages
-                foreach(DataSnapshot snap in userMessagesTask.Result.Children)
-                {
-                    Debug.Log(snap.GetRawJsonValue() + "From database");
-                    Message m = JsonUtility.FromJson<Message>(snap.GetRawJsonValue());
-                    userData.AddMessage(m);
-                    //Debug.Log(snap.GetRawJsonValue() + "After conversion");
-                }
-
-                PopupUtility.instance.DisplayPopup("Loaded " + userData.messages.Count + " messages.");
-            }
 
             //go to the home screen
             UIManager.instance.UserHomepageScreen();
@@ -306,6 +287,278 @@ namespace Lym
         #endregion
 
 
+        #region User Data Retrieval
+
+        /// <summary>
+        /// Retrieve the display name of a user, or most of their email if display name not available.
+        /// </summary>
+        /// <returns></returns>
+        public string GetUsername()
+        {
+            if (firebaseUser.DisplayName.Equals(""))
+            {
+                string trimmedEmail = firebaseUser.Email.Substring(0, firebaseUser.Email.IndexOf('@'));
+                return trimmedEmail;
+            }
+            else
+            {
+                return firebaseUser.DisplayName;
+            }
+
+        }
+
+        /// <summary>
+        /// Fetch a user's unique ID
+        /// </summary>
+        /// <returns></returns>
+        public string GetUserID()
+        {
+            return firebaseUser.UserId;
+        }
+
+        #endregion
+
+        #region MessagePublishing
+
+        /// <summary>
+        /// Attempt to generate a message and then begin upload to database. Requires location services to be running. 
+        /// </summary>
+        public void PublishMessage()
+        {
+            Message msg = MessageBuilder.instance.GenerateMessage();
+
+            if (msg != null)
+            {
+
+                Debug.Log(msg.ToString());
+                StartCoroutine(UpdateMessageDatabase(msg));
+
+            }
+            else
+            {
+                Debug.Log("Message failed to generate.");
+                PopupUtility.instance.DisplayPopup("Could not publish message, location could not be retrieved.");
+            }
+
+
+
+
+        }
+
+        /// <summary>
+        /// Upload user message to database.
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        private IEnumerator UpdateMessageDatabase(Message msg)
+        {
+            // store geofire locations
+            geoFire.setLocation(msg.id, new GeoLocation(msg.latitude, msg.longitude), null);
+
+            // create a broad geohash for the message location (which should be the user's current location)
+            GeoHash geoHash = new GeoHash(msg.latitude, msg.longitude, 3);
+
+            // get the 3 digit geohash
+            string hashy = geoHash.getGeoHashString();
+
+            // store the message in the main database
+            var DBTask = mainDBReference.Child("messages").Child(hashy).Child(userData.id).Child(msg.id).SetRawJsonValueAsync(msg.ToString());
+
+            yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
+
+            if (DBTask.Exception != null)
+            {
+                Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
+                PopupUtility.instance.DisplayPopup("Message failed to register with the database. Please try again later.");
+                // if we couldn't create the message, delete the location from geofire
+                geoFire.removeLocation(msg.id);
+            }
+            else
+            {
+                // Database username is now updated
+                PopupUtility.instance.DisplayPopup("Your message was successfully uploaded.");
+            }
+        }
+
+        #endregion
+
+
+        #region Message Retrieval
+
+        /// <summary>
+        /// Starts a coroutine that downloads user messages from the database. 
+        /// </summary>
+        public void UpdateUserMessages()
+        {
+            StartCoroutine(FetchUserMessages());
+        }
+
+        /// <summary>
+        /// Downloads user messages from database. When complete, notifies HomepageView
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator FetchUserMessages()
+        {
+            if (LocationServicesUtility.instance.UpdateGPSData())
+            {
+                // find out where the user is, get only their messages for current region
+                GeoHash geoHash = new GeoHash(LocationServicesUtility.instance.latitude, LocationServicesUtility.instance.longitude, 3);
+                string hashy = geoHash.getGeoHashString();
+
+                // create an asynchronus task to retrieve all messages that the user has
+                var userMessagesTask = mainDBReference.Child("messages").Child(hashy).Child(firebaseUser.UserId).GetValueAsync();
+
+                yield return new WaitUntil(predicate: () => userMessagesTask.IsCompleted);
+
+                if (userMessagesTask.Exception != null)
+                {
+                    // failed to complete task
+                    Debug.LogWarning(message: $"Failed to register task with {userMessagesTask.Exception}");
+                }
+                else
+                {
+                    // task succeeded
+
+                    // wipe user's current messages so we don't get duplicates
+                    userData.ClearMessages();
+
+                    // loop over all of the user's messages
+                    foreach (DataSnapshot snap in userMessagesTask.Result.Children)
+                    {
+                        Debug.Log(snap.GetRawJsonValue() + "From database");
+                        Message m = JsonUtility.FromJson<Message>(snap.GetRawJsonValue());
+                        userData.AddMessage(m);
+                        Debug.Log(snap.GetRawJsonValue() + "After conversion");
+                    }
+
+                    PopupUtility.instance.DisplayPopup("Loaded " + userData.messages.Count + " messages.");
+                }
+
+                HomepageView.instance.PopulateMessageView();
+            } else
+            {
+                PopupUtility.instance.DisplayPopup("Could not retrieve your messages in this region, location services are not working.");
+            }
+        }
+
+        private IEnumerator FetchNearbyMessage(string messageID)
+        {
+
+            if (LocationServicesUtility.instance.UpdateGPSData())
+            {
+                // get the geohash for the region
+                GeoHash geoHash = new GeoHash(LocationServicesUtility.instance.latitude, LocationServicesUtility.instance.longitude, 3);
+                string hashy = geoHash.getGeoHashString();
+
+                // get the message's owner ID from the key
+                string ownerID = messageID.Substring(0, 28);
+
+                // create an asynchronus task to retrieve all messages in a region
+                var nearbyMessageTask = mainDBReference.Child("messages").Child(hashy).Child(ownerID).Child(messageID).GetValueAsync();
+
+                yield return new WaitUntil(predicate: () => nearbyMessageTask.IsCompleted);
+
+                if (nearbyMessageTask.Exception != null)
+                {
+                    // failed to complete task
+                    Debug.LogWarning(message: $"Failed to register task with {nearbyMessageTask.Exception}");
+                }
+                else
+                {
+                    // task succeeded
+
+                    // wipe current nearby messages to avoid duplicates
+                    NearbyMessageView.instance.ClearMessages();
+
+                    //Debug.Log("From firebase: " + nearbyMessageTask.Result.GetRawJsonValue());
+
+                    Message m = JsonUtility.FromJson<Message>(nearbyMessageTask.Result.GetRawJsonValue());
+                    NearbyMessageView.instance.AddMessage(m);
+
+                    //Debug.Log("After conversion: " + m.ToString());
+                }
+            } else
+            {
+                PopupUtility.instance.DisplayPopup("Could not retrieve messages in your region, location services are not working.");
+            }
+        }
+
+        #endregion
+
+        #region Geofire Queries
+
+        public void BeginGeofireQuery()
+        {
+
+            if (LocationServicesUtility.instance.UpdateGPSData())
+            {
+
+                float lat = LocationServicesUtility.instance.latitude;
+                float lng = LocationServicesUtility.instance.longitude;
+
+                // query location in 6 meters
+                query = geoFire.queryAtLocation(new GeoLocation(lat, lng), .07f);
+
+                query.geoQueryReadyListeners += OnGeoQueryReady;
+                query.geoQueryErrorListeners += OnGeoQueryError;
+                query.keyEnteredListeners += OnKeyEntered;
+                query.keyExitedListeners += OnKeyExited;
+                query.keyMovedListeners += OnKeyMoved;
+
+                query.initializeListeners();
+
+            }
+            else
+            {
+
+                Debug.Log("Big sad, location not work");
+
+            }
+        }
+
+        public void EndGeofireQuery()
+        {
+            Debug.Log("The query would stop if this was implemented");
+        }
+
+        private void OnGeoQueryReady()
+        {
+            Debug.Log("Geo-query ready.");
+        }
+
+        private void OnGeoQueryError(DatabaseError error)
+        {
+            Debug.LogError("Geo query error: " + error);
+            PopupUtility.instance.DisplayPopup("Geo query had a problem.");
+        }
+
+        private void OnKeyEntered(string key, GeoLocation location)
+        {
+            // key substring is 0, 29 to get user id
+            Debug.LogFormat("Geo query ENTER: {0} :: {1}", key, location.toString());
+            // debug popup
+            PopupUtility.instance.DisplayPopup("There is a message within 20 feet of you!");
+
+            // start coroutine for getting nearby messages
+            StartCoroutine(FetchNearbyMessage(key));
+        }
+
+        private void OnKeyExited(string key)
+        {
+            Debug.Log("Geo query EXITED : " + key);
+            PopupUtility.instance.DisplayPopup("You left the key");
+        }
+
+        private void OnKeyMoved(string key, GeoLocation location)
+        {
+            Debug.LogFormat("Geo query moved: {0} :: {1}", key, location);
+        }
+
+        #endregion
+
+
+        #region Username Updating (Unused?)
+
         /// <summary>
         /// Update a user's displayname in the authorization system
         /// </summary>
@@ -314,18 +567,19 @@ namespace Lym
         private IEnumerator UpdateUsernameAuth(string username)
         {
             // Create a user profile and set the username
-            UserProfile profile = new UserProfile { DisplayName=username };
+            UserProfile profile = new UserProfile { DisplayName = username };
 
             // Update the Firebase user auth
             var profileTask = firebaseUser.UpdateUserProfileAsync(profile);
 
             // Wait for the task to complete
-            yield return new WaitUntil(predicate: () => profileTask.IsCompleted);   
+            yield return new WaitUntil(predicate: () => profileTask.IsCompleted);
 
-            if(profileTask.Exception != null)
+            if (profileTask.Exception != null)
             {
                 Debug.LogWarning(message: $"Failed to register task with {profileTask.Exception}");
-            } else
+            }
+            else
             {
                 // Auth username is now updated
             }
@@ -338,98 +592,21 @@ namespace Lym
         /// <returns></returns>
         private IEnumerator UpdateUsernameDatabase(string username)
         {
-            var DBTask = DBReference.Child("users").Child(firebaseUser.UserId).Child("username").SetValueAsync(username);
-
-            yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
-
-            if(DBTask.Exception != null)
-            {
-                Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
-            } else
-            {
-                // Database username is now updated
-            }
-        }
-
-
-
-        /// <summary>
-        /// Upload user message to database.
-        /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        private IEnumerator UpdateMessageDatabase(Message msg)
-        {
-            var DBTask = DBReference.Child("users").Child(firebaseUser.UserId).Child("messages").Child(msg.id).SetRawJsonValueAsync(msg.ToString());
+            var DBTask = mainDBReference.Child("users").Child(firebaseUser.UserId).Child("username").SetValueAsync(username);
 
             yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
 
             if (DBTask.Exception != null)
             {
                 Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
-                PopupUtility.instance.DisplayPopup("Message failed to register with the database. Please try again later.");
             }
             else
             {
                 // Database username is now updated
-                PopupUtility.instance.DisplayPopup("Your message was successfully uploaded.");
             }
         }
 
-
-
-        /// <summary>
-        /// Retrieve the display name of a user, or most of their email if display name not available.
-        /// </summary>
-        /// <returns></returns>
-        public string GetUsername()
-        {
-            if (firebaseUser.DisplayName.Equals(""))
-            {
-                string trimmedEmail = firebaseUser.Email.Substring(0, firebaseUser.Email.IndexOf('@'));
-                return trimmedEmail;
-            } else
-            {
-                return firebaseUser.DisplayName;
-            }
-            
-        }
-
-        /// <summary>
-        /// Fetch a user's unique ID
-        /// </summary>
-        /// <returns></returns>
-        public string GetUserID()
-        {
-            return firebaseUser.UserId;
-        }
-
-        /// <summary>
-        /// Attempt to generate a message and then begin upload to database. Requires location services to be running. 
-        /// </summary>
-        public void PublishMessage()
-        {
-            Message msg = MessageBuilder.instance.GenerateMessage();
-
-            if(msg != null)
-            {
-
-                Debug.Log(msg.ToString());
-                StartCoroutine(UpdateMessageDatabase(msg));
-
-            } else
-            {
-                Debug.Log("Message failed to generate.");
-                PopupUtility.instance.DisplayPopup("Could not publish message, location could not be retrieved.");
-            }
-
-            
-
-            
-        }
-
-        
-
+        #endregion
     }
 
 }

@@ -31,6 +31,11 @@ namespace Lym
             }
         }
 
+        public void ClearMessages()
+        {
+            messages = new List<Message>();
+        }
+
     }
 
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 namespace Lym {
@@ -14,6 +15,7 @@ namespace Lym {
 
         public GameObject messageListPrefab;
 
+        public ScrollRect scrollRect;
         private void Awake()
         {
             if (instance == null)
@@ -25,6 +27,11 @@ namespace Lym {
                 Debug.Log("Instance already exists, destroying object!");
                 Destroy(this);
             }
+        }     
+
+        public void SetWelcomeText()
+        {
+            welcomeLabel.SetText("Welcome, " + FirebaseManager.instance.GetUsername());
         }
 
         public void ClearMessageView()
@@ -37,16 +44,23 @@ namespace Lym {
             }
         }
 
-        public void SetWelcomeText()
+        /// <summary>
+        ///  Starts a chain: FirebaseManager is told to request a user's messages. Once the messages are retrieved, 
+        ///  Firebase manager tells HomepageView to populate itself.
+        /// </summary>
+        public void FetchMessages()
         {
-            welcomeLabel.SetText("Welcome, " + FirebaseManager.instance.GetUsername());
+            FirebaseManager.instance.UpdateUserMessages();
         }
 
+        /// <summary>
+        /// Once user data is retrieved, this message can be called by the FirebaseManager
+        /// </summary>
         public void PopulateMessageView()
         {
             User userRef = FirebaseManager.instance.userData;
 
-            foreach(Message m in userRef.messages)
+            foreach (Message m in userRef.messages)
             {
                 // spawn a message prefab
                 GameObject temp = Instantiate(messageListPrefab, messageList);
@@ -55,6 +69,7 @@ namespace Lym {
                 temp.GetComponent<MessageButton>().Init(m);
             }
         }
+
     }
 
 }
