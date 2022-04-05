@@ -17,6 +17,13 @@ namespace Lym
         public GameObject messageEditorUI;
         public GameObject nearbyMessagesUI;
 
+        // View variables
+        [SerializeField]
+        private HomepageView homepageView;
+
+        [SerializeField]
+        private NearbyMessageView nearbyMessageView;
+
         // Set up singleton
         private void Awake()
         {
@@ -52,9 +59,7 @@ namespace Lym
         {
             CloseScreens();
             userHomepageUI.SetActive(true);
-            HomepageView.instance.SetWelcomeText();
-            HomepageView.instance.ClearMessageView();
-            HomepageView.instance.FetchMessages();
+            homepageView.Init();
         }
 
         // Search for messages screen
@@ -62,7 +67,7 @@ namespace Lym
         {
             CloseScreens();
             nearbyMessagesUI.SetActive(true);
-            NearbyMessageView.instance.ClearMessageView();
+            nearbyMessageView.ClearMessageView();
             //NearbyMessageView.instance.PopulateMessageView();
         }
 

@@ -7,6 +7,7 @@ using Firebase.Auth;
 using com.draconianmarshmallows.geofire;
 using com.draconianmarshmallows.geofire.core;
 using TMPro;
+using System;
 
 namespace Lym
 {
@@ -18,7 +19,7 @@ namespace Lym
         [Header("Firebase")]
         public DependencyStatus dependencyStatus;
         public FirebaseAuth auth;
-        public FirebaseUser firebaseUser;
+        public FirebaseUser user;
         public DatabaseReference mainDBReference;
         public DatabaseReference geofireDBReference;
         public GeoFire geoFire;
@@ -42,6 +43,10 @@ namespace Lym
         // User Page Fields
         public User userData;
 
+        // Events
+        public event UserMessagesLoaded OnUserMessagesLoaded;
+        public event NearbyMessagesLoaded OnNearbyMessagesLoaded;
+
         private void Awake()
         {
             // singleton setup
@@ -55,38 +60,99 @@ namespace Lym
                 Destroy(this);
             }
 
-            // We are issuing an asynchronous task to check dependencies so Firebase can work. 
+        }
 
-            FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task =>
+        private void Start()
+        {
+            StartCoroutine(CheckAndFixDependencies());
+        }
+
+        #region Setup
+
+        private IEnumerator CheckAndFixDependencies()
+        {
+            var checkAndFixDependenciesTask = FirebaseApp.CheckAndFixDependenciesAsync();
+
+            yield return new WaitUntil(predicate: () => checkAndFixDependenciesTask.IsCompleted);
+
+            var dependencyResult = checkAndFixDependenciesTask.Result;
+
+            if(dependencyResult == DependencyStatus.Available)
             {
-                dependencyStatus = task.Result;
-
-                if (dependencyStatus == DependencyStatus.Available)
-                {
-                    // If Firebase can be initialized on this device: 
-                    InitializeFirebase();
-
-                }
-                else
-                {
-                    Debug.LogError("Could not resolve all Firebase dependencies: " + dependencyStatus);
-                }
-
-
-            });
-
-
+                InitializeFirebase();
+            } else
+            {
+                Debug.LogError($"Could not resolve all Firebase dependencies: {dependencyResult}");
+            }
         }
 
         private void InitializeFirebase()
         {
             Debug.Log("Setting up Firebase Auth");
+
             auth = FirebaseAuth.DefaultInstance;
+            auth.StateChanged += AuthStateChanged;
+            AuthStateChanged(this, null);
+            StartCoroutine(CheckAutoLogin());
+
             mainDBReference = FirebaseDatabase.DefaultInstance.RootReference;
+
             geofireDBReference = mainDBReference.Child("geofire");
             geoFire = new GeoFire(geofireDBReference);
+
+            
         }
 
+        private IEnumerator CheckAutoLogin()
+        {
+            yield return new WaitForEndOfFrame();
+
+            if(user != null)
+            {
+                var reloadUserTask = user.ReloadAsync();
+
+                yield return new WaitUntil(() => reloadUserTask.IsCompleted);
+
+                AutoLogin();
+            } else
+            {
+                // no user, normal login
+            }
+        }
+
+        private void AutoLogin()
+        {
+            if(user != null)
+            {
+                // go to homepage
+            } else
+            {
+                // go to login
+            }
+        }
+
+        private void AuthStateChanged(object sender, EventArgs e)
+        {
+            if(auth.CurrentUser != user)
+            {
+                bool signedIn = user != auth.CurrentUser && auth.CurrentUser != null;
+
+                if(!signedIn && user != null)
+                {
+                    Debug.Log("Signed out");
+                    // any logic that should happen when the player logs out
+                }
+
+                user = auth.CurrentUser;
+
+                if (signedIn)
+                {
+                    Debug.Log($"Signed in: {user.DisplayName}");
+                }
+            }
+        }
+
+        #endregion
 
         #region Buttons
 
@@ -159,8 +225,8 @@ namespace Lym
             {
                 // The user is now logged in
                 // Get the result
-                firebaseUser = LoginTask.Result;
-                Debug.LogFormat("User signed in successfully: {0} ({1})", firebaseUser.DisplayName, firebaseUser.Email);
+                user = LoginTask.Result;
+                Debug.LogFormat("User signed in successfully: {0} ({1})", user.DisplayName, user.Email);
                 warningLoginText.text = "";
                 confirmLoginText.text = "Logged In";
 
@@ -180,7 +246,7 @@ namespace Lym
         private void SetUpUser()
         {
             // create the user object (this is just to keep a local reference so we can query the database less)
-            userData = new User(firebaseUser.UserId);
+            userData = new User(user.UserId);
 
 
             //go to the home screen
@@ -249,15 +315,15 @@ namespace Lym
 
                     // User has been created
                     // Get the result from Firebase
-                    firebaseUser = RegisterTask.Result;
+                    user = RegisterTask.Result;
 
-                    if (firebaseUser != null)
+                    if (user != null)
                     {
                         // Create a user profile and set the username
                         UserProfile profile = new UserProfile { DisplayName = username };
 
                         // Call the Firebase auth update user profile function and pass the profile with the username
-                        var ProfileTask = firebaseUser.UpdateUserProfileAsync(profile);
+                        var ProfileTask = user.UpdateUserProfileAsync(profile);
 
                         // Wait for the task to complete
                         yield return new WaitUntil(predicate: () => ProfileTask.IsCompleted);
@@ -295,14 +361,14 @@ namespace Lym
         /// <returns></returns>
         public string GetUsername()
         {
-            if (firebaseUser.DisplayName.Equals(""))
+            if (user.DisplayName.Equals(""))
             {
-                string trimmedEmail = firebaseUser.Email.Substring(0, firebaseUser.Email.IndexOf('@'));
+                string trimmedEmail = user.Email.Substring(0, user.Email.IndexOf('@'));
                 return trimmedEmail;
             }
             else
             {
-                return firebaseUser.DisplayName;
+                return user.DisplayName;
             }
 
         }
@@ -313,7 +379,7 @@ namespace Lym
         /// <returns></returns>
         public string GetUserID()
         {
-            return firebaseUser.UserId;
+            return user.UserId;
         }
 
         #endregion
@@ -406,7 +472,7 @@ namespace Lym
                 string hashy = geoHash.getGeoHashString();
 
                 // create an asynchronus task to retrieve all messages that the user has
-                var userMessagesTask = mainDBReference.Child("messages").Child(hashy).Child(firebaseUser.UserId).GetValueAsync();
+                var userMessagesTask = mainDBReference.Child("messages").Child(hashy).Child(user.UserId).GetValueAsync();
 
                 yield return new WaitUntil(predicate: () => userMessagesTask.IsCompleted);
 
@@ -434,7 +500,10 @@ namespace Lym
                     PopupUtility.instance.DisplayPopup("Loaded " + userData.messages.Count + " messages.");
                 }
 
-                HomepageView.instance.PopulateMessageView();
+                // notify homepage view that messages were loaded
+                OnUserMessagesLoaded?.Invoke();
+
+
             } else
             {
                 PopupUtility.instance.DisplayPopup("Could not retrieve your messages in this region, location services are not working.");
@@ -557,6 +626,14 @@ namespace Lym
         #endregion
 
 
+        #region Delegates
+
+        public delegate void UserMessagesLoaded();
+
+        public delegate void NearbyMessagesLoaded();
+
+        #endregion
+
         #region Username Updating (Unused?)
 
         /// <summary>
@@ -570,7 +647,7 @@ namespace Lym
             UserProfile profile = new UserProfile { DisplayName = username };
 
             // Update the Firebase user auth
-            var profileTask = firebaseUser.UpdateUserProfileAsync(profile);
+            var profileTask = user.UpdateUserProfileAsync(profile);
 
             // Wait for the task to complete
             yield return new WaitUntil(predicate: () => profileTask.IsCompleted);
@@ -592,7 +669,7 @@ namespace Lym
         /// <returns></returns>
         private IEnumerator UpdateUsernameDatabase(string username)
         {
-            var DBTask = mainDBReference.Child("users").Child(firebaseUser.UserId).Child("username").SetValueAsync(username);
+            var DBTask = mainDBReference.Child("users").Child(user.UserId).Child("username").SetValueAsync(username);
 
             yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
 

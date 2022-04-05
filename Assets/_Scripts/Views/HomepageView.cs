@@ -8,7 +8,6 @@ namespace Lym {
 
     public class HomepageView : MonoBehaviour
     {
-        public static HomepageView instance;
 
         public TextMeshProUGUI welcomeLabel;
         public Transform messageList;
@@ -16,25 +15,20 @@ namespace Lym {
         public GameObject messageListPrefab;
 
         public ScrollRect scrollRect;
-        private void Awake()
+        
+        public void Init()
         {
-            if (instance == null)
-            {
-                instance = this;
-            }
-            else if (instance != null)
-            {
-                Debug.Log("Instance already exists, destroying object!");
-                Destroy(this);
-            }
-        }     
+            SetWelcomeText();
+            ClearMessageView();
+            FetchMessages();
+        }
 
-        public void SetWelcomeText()
+        private void SetWelcomeText()
         {
             welcomeLabel.SetText("Welcome, " + FirebaseManager.instance.GetUsername());
         }
 
-        public void ClearMessageView()
+        private void ClearMessageView()
         {
             foreach (Transform temp in messageList)
             {
@@ -48,15 +42,18 @@ namespace Lym {
         ///  Starts a chain: FirebaseManager is told to request a user's messages. Once the messages are retrieved, 
         ///  Firebase manager tells HomepageView to populate itself.
         /// </summary>
-        public void FetchMessages()
+        private void FetchMessages()
         {
             FirebaseManager.instance.UpdateUserMessages();
+
+            FirebaseManager.instance.OnUserMessagesLoaded += PopulateMessageView;
         }
+
 
         /// <summary>
         /// Once user data is retrieved, this message can be called by the FirebaseManager
         /// </summary>
-        public void PopulateMessageView()
+        private void PopulateMessageView()
         {
             User userRef = FirebaseManager.instance.userData;
 
@@ -68,6 +65,9 @@ namespace Lym {
                 // populate the pieces of the message prefab
                 temp.GetComponent<MessageButton>().Init(m);
             }
+
+            // unsubscribe from the event
+            FirebaseManager.instance.OnUserMessagesLoaded -= PopulateMessageView;
         }
 
     }
