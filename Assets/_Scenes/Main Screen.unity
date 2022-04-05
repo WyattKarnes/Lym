@@ -12834,6 +12834,8 @@ MonoBehaviour:
   userHomepageUI: {fileID: 306908232}
   messageEditorUI: {fileID: 1022838234}
   nearbyMessagesUI: {fileID: 1339882958}
+  homepageView: {fileID: 1799091553}
+  nearbyMessageView: {fileID: 1799091554}
 --- !u!4 &1702092253
 Transform:
   m_ObjectHideFlags: 0
