@@ -501,8 +501,7 @@ namespace Lym
                 }
 
                 // notify homepage view that messages were loaded
-                OnUserMessagesLoaded?.Invoke();
-
+                OnUserMessagesLoaded?.Invoke();    
 
             } else
             {
