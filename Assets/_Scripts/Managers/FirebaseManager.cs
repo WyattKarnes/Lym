@@ -46,6 +46,7 @@ namespace Lym
         // Events
         public event UserMessagesLoaded OnUserMessagesLoaded;
         public event NearbyMessagesLoaded OnNearbyMessagesLoaded;
+        public event NearbyMessageExited OnNearbyMessageExited;
 
         private void Awake()
         {
@@ -418,7 +419,7 @@ namespace Lym
         /// <returns></returns>
         private IEnumerator UpdateMessageDatabase(Message msg)
         {
-            // store geofire locations
+            // create a geoFire reference to the message for later lookup
             geoFire.setLocation(msg.id, new GeoLocation(msg.latitude, msg.longitude), null);
 
             // create a broad geohash for the message location (which should be the user's current location)
@@ -427,7 +428,7 @@ namespace Lym
             // get the 3 digit geohash
             string hashy = geoHash.getGeoHashString();
 
-            // store the message in the main database
+            // store the actual message in the main database
             var DBTask = mainDBReference.Child("messages").Child(hashy).Child(userData.id).Child(msg.id).SetRawJsonValueAsync(msg.ToString());
 
             yield return new WaitUntil(predicate: () => DBTask.IsCompleted);
@@ -436,6 +437,7 @@ namespace Lym
             {
                 Debug.LogWarning(message: $"Failed to register task with {DBTask.Exception}");
                 PopupUtility.instance.DisplayPopup("Message failed to register with the database. Please try again later.");
+
                 // if we couldn't create the message, delete the location from geofire
                 geoFire.removeLocation(msg.id);
             }
@@ -521,7 +523,7 @@ namespace Lym
                 // get the message's owner ID from the key
                 string ownerID = messageID.Substring(0, 28);
 
-                // create an asynchronus task to retrieve all messages in a region
+                // create an asynchronus task to retrieve the target message
                 var nearbyMessageTask = mainDBReference.Child("messages").Child(hashy).Child(ownerID).Child(messageID).GetValueAsync();
 
                 yield return new WaitUntil(predicate: () => nearbyMessageTask.IsCompleted);
@@ -535,13 +537,10 @@ namespace Lym
                 {
                     // task succeeded
 
-                    // wipe current nearby messages to avoid duplicates
-                    NearbyMessageView.instance.ClearMessages();
-
                     //Debug.Log("From firebase: " + nearbyMessageTask.Result.GetRawJsonValue());
 
                     Message m = JsonUtility.FromJson<Message>(nearbyMessageTask.Result.GetRawJsonValue());
-                    NearbyMessageView.instance.AddMessage(m);
+                    OnNearbyMessagesLoaded?.Invoke(m);
 
                     //Debug.Log("After conversion: " + m.ToString());
                 }
@@ -615,6 +614,9 @@ namespace Lym
         {
             Debug.Log("Geo query EXITED : " + key);
             PopupUtility.instance.DisplayPopup("You left the key");
+
+            // notify nearby message screen that a message is no longer within the search zone
+            OnNearbyMessageExited?.Invoke(key);
         }
 
         private void OnKeyMoved(string key, GeoLocation location)
@@ -629,7 +631,9 @@ namespace Lym
 
         public delegate void UserMessagesLoaded();
 
-        public delegate void NearbyMessagesLoaded();
+        public delegate void NearbyMessagesLoaded(Message m);
+
+        public delegate void NearbyMessageExited(string messageID);
 
         #endregion
 

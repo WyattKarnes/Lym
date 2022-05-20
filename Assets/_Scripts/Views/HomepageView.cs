@@ -44,9 +44,8 @@ namespace Lym {
         /// </summary>
         private void FetchMessages()
         {
-            FirebaseManager.instance.UpdateUserMessages();
-
             FirebaseManager.instance.OnUserMessagesLoaded += PopulateMessageView;
+            FirebaseManager.instance.UpdateUserMessages(); 
         }
 
 

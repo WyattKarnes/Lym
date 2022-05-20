@@ -1,7 +1,9 @@
 using UnityEngine;
+using System;
 
-namespace Lym {
-    public class Message
+namespace Lym
+{
+    public class Message : MonoBehaviour, IEquatable<Message>
     {
         public string id;
 
@@ -14,7 +16,7 @@ namespace Lym {
         public float longitude;
 
         public int gesture;
-        
+
         // For creating NEW messages
         public Message(string messageText, int gesture, float latitude, float longitude)
         {
@@ -31,13 +33,23 @@ namespace Lym {
         // For populating a User's message list when they log in
         public Message(string id, string messageText, int goodRatings, int badRatings, float latitude, float longitude, int gesture)
         {
-            this.id=id;
-            this.messageText=messageText;
-            this.goodRatings=goodRatings;
-            this.badRatings=badRatings;
-            this.latitude=latitude;
-            this.longitude=longitude;
-            this.gesture=gesture;
+            this.id = id;
+            this.messageText = messageText;
+            this.goodRatings = goodRatings;
+            this.badRatings = badRatings;
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.gesture = gesture;
+        }
+
+        public bool Equals(Message other)
+        {
+            if(other == null)
+            {
+                return false;
+            }
+
+            return (this.id.Equals(other.id));
         }
 
         public override string ToString()

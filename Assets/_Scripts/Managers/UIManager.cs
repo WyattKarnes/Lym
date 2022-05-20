@@ -67,8 +67,7 @@ namespace Lym
         {
             CloseScreens();
             nearbyMessagesUI.SetActive(true);
-            nearbyMessageView.ClearMessageView();
-            //NearbyMessageView.instance.PopulateMessageView();
+            nearbyMessageView.Init();
         }
 
         // Create Message Button

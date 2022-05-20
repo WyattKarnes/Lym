@@ -7,49 +7,57 @@ namespace Lym
 
     public class NearbyMessageView : MonoBehaviour
     {
-
-        public static NearbyMessageView instance;
-
         public Transform messageList;
 
         public GameObject messageListPrefab;
 
         public List<Message> messages = new List<Message>();
 
-        private void Awake()
+        public void Init()
         {
-            if (instance == null)
+            // delete all message buttons that may have been added before
+            ClearMessageView();
+
+            // subscribe to FirebaseManager for nearby messages
+            FirebaseManager.instance.OnNearbyMessagesLoaded += AddMessage;
+            FirebaseManager.instance.OnNearbyMessageExited += RemoveMessage;
+
+            // tell the firebase manager to start GeoFire queries
+            FirebaseManager.instance.BeginGeofireQuery();
+        }
+
+        /// <summary>
+        /// Called whenever this screen is open and the FirebaseManager finds a nearby message
+        /// </summary>
+        /// <param name="msg"></param>
+        private void AddMessage(Message msg)
+        {
+            // ensure duplicates are not added
+            if (!messages.Contains(msg))
             {
-                instance = this;
+                messages.Add(msg);
+                ClearMessageView();
+                PopulateMessageView();
             }
-            else
+        }
+
+        private void RemoveMessage(string msgID)
+        {
+            messages.Find(msg =>
             {
-                Destroy(this);
-            }
+                if (msg.id.Equals(msgID))
+                {
+                    messages.Remove(msg);
+                    ClearMessageView();
+                    PopulateMessageView();
+                    return true;
+                }
+
+                return false;
+            });
         }
 
-        public void ClearMessages()
-        {
-            messages.Clear();
-        }
-
-        public void ClearMessageView()
-        {
-            foreach (Transform temp in messageList)
-            {
-                // reactivate this when buttons are completed
-                //temp.GetComponent<Button>().onClick.RemoveAllListeners();
-                Destroy(temp.gameObject);
-            }
-        }
-
-        public void AddMessage(Message msg)
-        {
-            messages.Add(msg);
-            PopulateMessageView();
-        }
-
-        public void PopulateMessageView()
+        private void PopulateMessageView()
         {
             // go over messages data, generating MessageButtons on the way
             foreach (Message m in messages)
@@ -62,6 +70,24 @@ namespace Lym
             }
         }
 
+        private void ClearMessageView()
+        {
+            foreach (Transform temp in messageList)
+            {
+                // reactivate this when buttons are completed
+                //temp.GetComponent<Button>().onClick.RemoveAllListeners();
+                Destroy(temp.gameObject);
+            }
+        }
+
+        /// <summary>
+        /// Unsubscribes the now inactive screen from FirebaseManager events
+        /// </summary>
+        private void OnDisable()
+        {
+            FirebaseManager.instance.OnNearbyMessagesLoaded -= AddMessage;
+            FirebaseManager.instance.OnNearbyMessageExited -= RemoveMessage;
+        }
     }
 
 }
