@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +8,7 @@ using Firebase.Auth;
 using com.draconianmarshmallows.geofire;
 using com.draconianmarshmallows.geofire.core;
 using TMPro;
-using System;
+
 
 namespace Lym
 {
@@ -246,11 +247,23 @@ namespace Lym
         /// <returns></returns>
         private void SetUpUser()
         {
-            // create the user object (this is just to keep a local reference so we can query the database less)
+            // Create the user object (this is just to keep a local reference so we can query the database less)
+            // Will also be used to get the user's character from a local file.
             userData = new User(user.UserId);
 
+            // Attempt to load the User's character. If there isn't one, create a default character and store that.
 
-            //go to the home screen
+            if (LocalFilesManager.instance.CharacterSaveExists(userData))
+            {
+                Debug.Log("Character save found. Loading.");
+                LocalFilesManager.instance.LoadCharacter();
+            } else
+            {
+                Debug.Log("Character save not found. Creating placeholder.");
+                LocalFilesManager.instance.SaveCharacter();
+            }
+
+            // Go to the home screen
             UIManager.instance.UserHomepageScreen();
 
         }
@@ -351,6 +364,7 @@ namespace Lym
             }
         }
 
+
         #endregion
 
 
@@ -392,7 +406,7 @@ namespace Lym
         /// </summary>
         public void PublishMessage()
         {
-            Message msg = MessageBuilder.instance.GenerateMessage();
+            Message msg = MessageBuilder.instance.GenerateMessage(userData);
 
             if (msg != null)
             {
@@ -406,9 +420,6 @@ namespace Lym
                 Debug.Log("Message failed to generate.");
                 PopupUtility.instance.DisplayPopup("Could not publish message, location could not be retrieved.");
             }
-
-
-
 
         }
 

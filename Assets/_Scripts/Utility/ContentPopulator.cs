@@ -6,7 +6,9 @@ using TMPro;
 
 namespace Lym
 {
-
+    /// <summary>
+    /// Whenever a screen is accessed that has multiple options, this script will generate all possible choices as buttons. 
+    /// </summary>
     public class ContentPopulator : MonoBehaviour
     {
         public string[] lines;
@@ -15,7 +17,7 @@ namespace Lym
         private GameObject choiceButtonPrefab;
 
         [SerializeField]
-        private Transform templateContainer, categoriesContainer, wordsContainer, conjunctionContainer;
+        private Transform templateContainer, categoriesContainer, wordsContainer, conjunctionContainer, gestureContainer;
 
 
         public void PopulateScrollViews()
@@ -23,6 +25,7 @@ namespace Lym
             PopulateTemplates();
             PopulateCategories();
             PopulateConjunctions();
+            PopulateGestures();
         }
 
         public void ClearScrollViews()
@@ -31,6 +34,7 @@ namespace Lym
             ClearCategories();
             ClearWords();
             ClearConjunctions();
+            ClearGestures();
         }
 
 
@@ -108,12 +112,12 @@ namespace Lym
 
         // The words are special, because they fall into categories. So the words are populated based on the category that is chosen.
         // As such, this method should only be called when the categories are populated, or when the category is switched in the UI.
-        public void PopulateWords(int choice)
+        public void PopulateWords(int category)
         {
             // clean out the previous words to make room for the new ones
             ClearWords();
 
-            TextAsset templates = Resources.Load<TextAsset>("words/words " + choice);
+            TextAsset templates = Resources.Load<TextAsset>("words/words " + category);
 
             lines = templates.text.Split('\n');
 
@@ -134,6 +138,30 @@ namespace Lym
             }
         }
 
+        // Gestures could be special again, because they might not have words, but rather icons. 
+        public void PopulateGestures()
+        {
+            // load a list of possible animations from text file
+            TextAsset templates = Resources.Load<TextAsset>("gestures");
+            lines = templates.text.Split('\n');
+
+            // loop over list and create button for each one
+            for(int i = 0; i < lines.Length; i++)
+            {
+                GameObject temp = Instantiate(choiceButtonPrefab, gestureContainer);
+
+                // give the button label the text from 'lines'
+                TextMeshProUGUI textRef = temp.GetComponentInChildren<TextMeshProUGUI>();
+
+                textRef.text = lines[i].Trim('\r');
+
+                // grab the button component from temp
+                Button tempButton = temp.GetComponent<Button>();
+
+                // link up its event to the MessageEditorUIManager
+                tempButton.onClick.AddListener(() => MessageEditorView.instance.UpdateGesture(textRef));
+            }
+        }
 
 
         private void ClearTemplates()
@@ -162,6 +190,15 @@ namespace Lym
         private void ClearConjunctions()
         {
             foreach (Transform temp in conjunctionContainer)
+            {
+                temp.GetComponent<Button>().onClick.RemoveAllListeners();
+                Destroy(temp.gameObject);
+            }
+        }
+
+        private void ClearGestures()
+        {
+             foreach(Transform temp in gestureContainer)
             {
                 temp.GetComponent<Button>().onClick.RemoveAllListeners();
                 Destroy(temp.gameObject);

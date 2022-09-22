@@ -3,11 +3,15 @@ using System.Collections.Generic;
 
 namespace Lym
 {
-
+    [System.Serializable]
     public class User
     {
         public string id { get; private set; }
+
         public List<Message> messages { get; private set; }
+
+        // A data class to keep track of the appearance of the user's avatar
+        public Character character;
 
         public User(string id)
         {

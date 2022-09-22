@@ -10,19 +10,29 @@ namespace Lym
         // Make a singleton
         public static UIManager instance;
 
-        // Screen object variables
+        // Screen Object References
         public GameObject loginUI;
         public GameObject registerUI;
         public GameObject userHomepageUI;
         public GameObject messageEditorUI;
         public GameObject nearbyMessagesUI;
+        public GameObject characterCustomizerUI;
+        public GameObject messageDisplayUI;
+        public GameObject modelsParent;
+        public GameObject background;
 
-        // View variables
+        // View Script References
         [SerializeField]
         private HomepageView homepageView;
 
         [SerializeField]
         private NearbyMessageView nearbyMessageView;
+
+        [SerializeField]
+        private CharacterCustomizationView characterCustomizationView;
+
+        [SerializeField]
+        private MessageDisplayView messageDisplayView;
 
         // Set up singleton
         private void Awake()
@@ -38,7 +48,6 @@ namespace Lym
             }
         }
 
-        // Functions to change the login screen UI
 
         // Back Button
         public void LoginScreen()
@@ -77,6 +86,24 @@ namespace Lym
             messageEditorUI.SetActive(true);
         }
 
+        public void CharacterCustomizerScreen()
+        {
+            CloseScreens();
+            characterCustomizerUI.SetActive(true);
+            characterCustomizationView.Init();
+            modelsParent.SetActive(true);
+            background.SetActive(false);
+        }
+
+        public void MessageDisplayScreen(Message message)
+        {
+            CloseScreens();
+            messageDisplayUI.SetActive(true);
+            messageDisplayView.Init(message);
+            modelsParent.SetActive(true);
+            background.SetActive(false);
+        }
+
         // This method prefaces all screen swaps. 
         private void CloseScreens()
         {        
@@ -86,6 +113,10 @@ namespace Lym
             userHomepageUI.SetActive(false);
             nearbyMessagesUI.SetActive(false);
             messageEditorUI.SetActive(false);
+
+            characterCustomizerUI.SetActive(false);
+            modelsParent.SetActive(false);
+            background.SetActive(true);
         }
     }
 

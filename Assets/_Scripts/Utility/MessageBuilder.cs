@@ -6,6 +6,9 @@ using Firebase.Auth;
 
 namespace Lym {
 
+    /// <summary>
+    /// Can be called upon to generate a new message object. This is accomplished by reading the values out of the fields in the UI.
+    /// </summary>
     public class MessageBuilder : MonoBehaviour
     {
 
@@ -19,7 +22,10 @@ namespace Lym {
         string wordText1 = "";
         string wordText2 = "";
         string conjunctionText = "";
-        int gesture = -1;
+
+        string gesture = "";
+
+        Character character;
 
         string messageText;
 
@@ -57,10 +63,11 @@ namespace Lym {
         }
 
         /// <summary>
-        /// Called by the MessageEditorView whenever a piece of a message is chosen
+        /// Called by the MessageEditorView whenever a piece of a message is chosen.
+        /// Based on the context, will update different pieces of the message.
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="context"></param>
+        /// <param name="text"> The text to store within the message. </param>
+        /// <param name="context"> Which piece of the message should be affected. </param>
         public void UpdateMessage(string text, string context)
         {
             
@@ -86,6 +93,10 @@ namespace Lym {
                 case "c":
                     conjunctionText = text;
                     break;
+
+                case "g":
+                    gesture = text;
+                    break;
             }       
 
         }
@@ -94,14 +105,18 @@ namespace Lym {
         /// Used to get the completed message from the builder
         /// </summary>
         /// <returns></returns>
-        public Message GenerateMessage()
+        public Message GenerateMessage(User user)
         {
             if (LocationServicesUtility.instance.UpdateGPSData())
             {
                 float lat = LocationServicesUtility.instance.latitude;
                 float lng = LocationServicesUtility.instance.longitude;
 
-                Message message = new Message(messageText, gesture, lat, lng);
+                Character userChar = user.character;
+
+                character = userChar == null ? userChar : new Character();
+
+                Message message = new Message(messageText, character, gesture, lat, lng);
                 return message;
             }
 

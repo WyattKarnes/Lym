@@ -5,7 +5,9 @@ using TMPro;
 
 namespace Lym
 {
-
+    /// <summary>
+    /// This script controls all aspects of the message editor, once it is open. 
+    /// </summary>
     public class MessageEditorView : MonoBehaviour
     {
         public static MessageEditorView instance;
@@ -34,6 +36,8 @@ namespace Lym
 
         [Header("Changeable Text References")]
         public TextMeshProUGUI messageDisplay;
+
+        [Header("Gesture UI References")]
 
         // The button label to modify when a selection is made.
         private TextMeshProUGUI labelToChange;
@@ -193,7 +197,11 @@ namespace Lym
             confirmationOverlay.SetActive(false);
         }
 
-
+        /// <summary>
+        /// Results in storing a string which will be used to tell the message builder what aspect 
+        /// of the message it should be updating.
+        /// </summary>
+        /// <param name="context"> A very short string that represents the relevant piece of a message that should be changed. </param>
         public void SetContext(string context)
         {
             choiceContext = context;
@@ -201,13 +209,22 @@ namespace Lym
 
         public void UpdateLabel(TextMeshProUGUI label)
         {
+            // update the text of the label to change
             labelToChange.text = label.text;
+            // dereference the label to change
             labelToChange = null;
 
             // notify the message builder to update its holdings
             MessageBuilder.instance.UpdateMessage(label.text, choiceContext);
 
             CloseOverlays();
+        }
+
+        public void UpdateGesture(TextMeshProUGUI label)
+        {
+            MessageBuilder.instance.UpdateMessage(label.text, choiceContext);
+
+            //TODO: start animating the character to preview the gesture
         }
 
         public void UpdateMessageDisplay(string text)

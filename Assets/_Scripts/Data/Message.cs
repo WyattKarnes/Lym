@@ -1,8 +1,13 @@
 using UnityEngine;
 using System;
 
+
 namespace Lym
 {
+    /// <summary>
+    /// A data class to compile all of the information about a message.
+    /// </summary>
+    [System.Serializable]
     public class Message : MonoBehaviour, IEquatable<Message>
     {
         public string id;
@@ -15,14 +20,17 @@ namespace Lym
         public float latitude;
         public float longitude;
 
-        public int gesture;
+        public Character character;
+
+        public string gesture;
 
         // For creating NEW messages
-        public Message(string messageText, int gesture, float latitude, float longitude)
+        public Message(string messageText, Character character, string gesture, float latitude, float longitude)
         {
             // the id should be userID + the number of messages the user has.
             this.id = FirebaseManager.instance.GetUserID() + "-MSG-" + FirebaseManager.instance.userData.messages.Count;
             this.messageText = messageText;
+            this.character = character;
             this.gesture = gesture;
 
             // set the latitude and longitude using the User's phone data
@@ -31,7 +39,7 @@ namespace Lym
         }
 
         // For populating a User's message list when they log in
-        public Message(string id, string messageText, int goodRatings, int badRatings, float latitude, float longitude, int gesture)
+        public Message(string id, string messageText, Character character, string gesture, int goodRatings, int badRatings, float latitude, float longitude)
         {
             this.id = id;
             this.messageText = messageText;
@@ -39,6 +47,7 @@ namespace Lym
             this.badRatings = badRatings;
             this.latitude = latitude;
             this.longitude = longitude;
+            this.character = character;
             this.gesture = gesture;
         }
 
