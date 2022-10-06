@@ -26,7 +26,7 @@ namespace Lym
         public GameObject words2Button;
         public GameObject words2Label;
 
-        // Temporary selection screens that will overlay instead of replace the current UI
+        // Temporary selection screens that will 'overlay' instead of replace the current UI
         [Header("Overlay References")]
         public GameObject templateSelectionUI;
         public GameObject wordSelectionUI;
@@ -38,11 +38,18 @@ namespace Lym
         public TextMeshProUGUI messageDisplay;
 
         [Header("Gesture UI References")]
+        private Character userCharacter;
+        public GameObject maleCharacter;
+        public GameObject femaleCharacter;
 
         // The button label to modify when a selection is made.
         private TextMeshProUGUI labelToChange;
 
-        // Will be used to tell the message builder what data to fill out
+
+        /// <summary>
+        /// Will be used to tell the message builder what data to fill out. 
+        /// Needed because Unity Buttons only pass one argument per call. 
+        /// </summary>
         private string choiceContext;
 
         // Set up singleton
@@ -57,9 +64,14 @@ namespace Lym
                 Debug.Log("Instance already exists, destroying object!");
                 Destroy(this);
             }
+
+            userCharacter = FirebaseManager.instance.userData.character;
         }
 
-        // For swapping formats
+        /// <summary>
+        /// Activates or deactivates the relevant GameObjects based on the chosen format of a message.
+        /// </summary>
+        /// <param name="choice"></param>
         public void ChangeFormat(int choice)
         {
             switch (choice)
@@ -78,6 +90,8 @@ namespace Lym
 
                     words2Button.SetActive(false);
                     words2Label.SetActive(false);
+
+                    UIManager.instance.DeactivateCharacterModel();
                     break;
 
                 case 1:
@@ -93,6 +107,8 @@ namespace Lym
 
                     words2Button.SetActive(false);
                     words2Label.SetActive(false);
+
+                    UIManager.instance.ActivateCharacterModel();
                     break;
 
                 case 2:
@@ -108,6 +124,8 @@ namespace Lym
 
                     words2Button.SetActive(true);
                     words2Label.SetActive(true);
+
+                    UIManager.instance.DeactivateCharacterModel();
                     break;
 
                 case 3:
@@ -123,25 +141,20 @@ namespace Lym
 
                     words2Button.SetActive(true);
                     words2Label.SetActive(true);
+
+                    UIManager.instance.ActivateCharacterModel();
                     break;
             }
         }
 
 
-
-        /// <summary>
-        ///  Open the template choice overlay
-        /// </summary>
-        /// <param name="obj">Used to differentiate which button the event call came from, so the proper text can be changed. </param>
         public void OpenTemplateOverlay(TextMeshProUGUI label)
         {
             templateSelectionUI.SetActive(true);
             labelToChange = label;
         }
 
-        /// <summary>
-        /// Close the template overlay
-        /// </summary>
+  
         public void CloseTemplateOverlay()
         {
             templateSelectionUI.SetActive(false);
@@ -175,9 +188,10 @@ namespace Lym
 
 
 
-        public void OpenGesturesOverlay()
+        public void OpenGesturesOverlay(TextMeshProUGUI label)
         {
             gestureSelectionUI.SetActive(true);
+            labelToChange = label;
         }
 
         public void CloseGestureOverlay()
@@ -197,9 +211,10 @@ namespace Lym
             confirmationOverlay.SetActive(false);
         }
 
+
         /// <summary>
         /// Results in storing a string which will be used to tell the message builder what aspect 
-        /// of the message it should be updating.
+        /// of the message it should be updating. This will be called whenever a choice button is selected. 
         /// </summary>
         /// <param name="context"> A very short string that represents the relevant piece of a message that should be changed. </param>
         public void SetContext(string context)
@@ -211,6 +226,7 @@ namespace Lym
         {
             // update the text of the label to change
             labelToChange.text = label.text;
+
             // dereference the label to change
             labelToChange = null;
 
@@ -222,9 +238,22 @@ namespace Lym
 
         public void UpdateGesture(TextMeshProUGUI label)
         {
+
+            labelToChange.text = label.text;
+
+            labelToChange = null;
+
             MessageBuilder.instance.UpdateMessage(label.text, choiceContext);
 
-            //TODO: start animating the character to preview the gesture
+            if (userCharacter.gender)
+            {
+                maleCharacter.GetComponent<Animator>().Play(label.text);
+            } else
+            {
+                femaleCharacter.GetComponent<Animator>().Play(label.text);
+            }
+
+            CloseOverlays();
         }
 
         public void UpdateMessageDisplay(string text)

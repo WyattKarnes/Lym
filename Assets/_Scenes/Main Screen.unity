@@ -281,7 +281,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -900}
+  m_AnchoredPosition: {x: 0, y: -1000}
   m_SizeDelta: {x: -350, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &61491635
@@ -1463,7 +1463,7 @@ Transform:
   - {fileID: 1075752502}
   - {fileID: 1944198259}
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &229523042
 GameObject:
@@ -3160,7 +3160,7 @@ RectTransform:
   - {fileID: 1111904943}
   - {fileID: 1439888662}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -3394,7 +3394,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99a626b4ede610f4c8363f4cc6f27199, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lines: []
+  fileLines: []
   choiceButtonPrefab: {fileID: 4498288447278359821, guid: df4d21acd13f65148a7b34dc7f44fc16,
     type: 3}
   templateContainer: {fileID: 2063019573}
@@ -3428,7 +3428,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &389872278
 MonoBehaviour:
@@ -4227,10 +4227,10 @@ MonoBehaviour:
       - m_Target: {fileID: 1799091551}
         m_TargetAssemblyTypeName: Lym.MessageEditorView, Assembly-CSharp
         m_MethodName: OpenGesturesOverlay
-        m_Mode: 1
+        m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgument: {fileID: 1003528121}
+          m_ObjectArgumentAssemblyTypeName: TMPro.TextMeshProUGUI, Unity.TextMeshPro
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -7717,7 +7717,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1702092252}
         m_TargetAssemblyTypeName: Lym.UIManager, Assembly-CSharp
-        m_MethodName: CharacterCustomizerScreen
+        m_MethodName: ActivateCharacterModel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -11203,7 +11203,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 600}
   m_SizeDelta: {x: 0, y: 1200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1235335727
@@ -14632,6 +14632,8 @@ MonoBehaviour:
   gestureSelectionUI: {fileID: 1312411335}
   confirmationOverlay: {fileID: 749793971}
   messageDisplay: {fileID: 1276949666}
+  maleCharacter: {fileID: 396567301}
+  femaleCharacter: {fileID: 1462267314}
 --- !u!4 &1799091552
 Transform:
   m_ObjectHideFlags: 0
@@ -14644,7 +14646,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1799091553
 MonoBehaviour:
@@ -16251,7 +16253,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2054636834
 RectTransform:
   m_ObjectHideFlags: 0

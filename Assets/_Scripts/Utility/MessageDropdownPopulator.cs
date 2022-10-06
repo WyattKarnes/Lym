@@ -9,9 +9,9 @@ namespace Lym
     /// <summary>
     /// Whenever a screen is accessed that has multiple options, this script will generate all possible choices as buttons. 
     /// </summary>
-    public class ContentPopulator : MonoBehaviour
+    public class MessageDropdownPopulator : MonoBehaviour
     {
-        public string[] lines;
+        public string[] fileLines;
 
         [SerializeField]
         private GameObject choiceButtonPrefab;
@@ -19,7 +19,9 @@ namespace Lym
         [SerializeField]
         private Transform templateContainer, categoriesContainer, wordsContainer, conjunctionContainer, gestureContainer;
 
-
+        /// <summary>
+        /// Calls all of the methods that populate scroll views. This happens whenever the message creating UI is activated.
+        /// </summary>
         public void PopulateScrollViews()
         {
             PopulateTemplates();
@@ -28,6 +30,10 @@ namespace Lym
             PopulateGestures();
         }
 
+        /// <summary>
+        /// Calls all of the clearing methods of scroll views. 
+        /// This happens whenever the message editing UI is closed. 
+        /// </summary>
         public void ClearScrollViews()
         {
             ClearTemplates();
@@ -37,28 +43,27 @@ namespace Lym
             ClearGestures();
         }
 
-
-
         private void PopulateTemplates()
         {
+            // create a list of templates from file
             TextAsset templates = Resources.Load<TextAsset>("templates");
-            lines = templates.text.Split('\n');
+            fileLines = templates.text.Split('\n');
 
-            // loop over the list of lines and create a new choice button for each one
-
-            for(int i = 0; i < lines.Length; i++)
-            {
+            // loop over the list of templates and create a new choice button for each one
+            for(int i = 0; i < fileLines.Length; i++)
+            {             
                 GameObject temp = Instantiate(choiceButtonPrefab, templateContainer);
 
-                // give the button label the text from 'lines'
+                // give the button label the text from 'fileLines'
                 TextMeshProUGUI tempText = temp.GetComponentInChildren<TextMeshProUGUI>();
 
-                tempText.text = lines[i].Trim('\r');
+                // remove the return character from the button's label
+                tempText.text = fileLines[i].Trim('\r');
 
                 // grab the button component from temp
                 Button tempButton = temp.GetComponent<Button>();
 
-                // link up its event to the MessageEditorUIManager
+                // link up the button's event to the MessageEditorUIManager
                 tempButton.onClick.AddListener(() => MessageEditorView.instance.UpdateLabel(tempText));
             }
 
@@ -67,15 +72,16 @@ namespace Lym
         // this method is special because it works on a dropdown and not a list of buttons
         private void PopulateCategories()
         {
+            // load a list of categories from file
             TextAsset templates = Resources.Load<TextAsset>("categories");
-            lines = templates.text.Split('\n');
+            fileLines = templates.text.Split('\n');
 
             // loop over the list of categories and add each one to the dropdown
             TMP_Dropdown temp = categoriesContainer.GetComponentInChildren<TMP_Dropdown>();
 
             List<TMP_Dropdown.OptionData> optionData = new List<TMP_Dropdown.OptionData>();
 
-            foreach (string line in lines)
+            foreach (string line in fileLines)
             {
                 optionData.Add(new TMP_Dropdown.OptionData(line));
             }
@@ -88,18 +94,18 @@ namespace Lym
         private void PopulateConjunctions()
         {
             TextAsset templates = Resources.Load<TextAsset>("conjunctions");
-            lines = templates.text.Split('\n');
+            fileLines = templates.text.Split('\n');
 
             // loop over the list of lines and create a new choice button for each one
 
-            for(int i = 0; i < lines.Length; i++)
+            for(int i = 0; i < fileLines.Length; i++)
             {
                 GameObject temp = Instantiate(choiceButtonPrefab, conjunctionContainer);
 
                 // give the button label the text from 'lines'
                 TextMeshProUGUI tempText = temp.GetComponentInChildren<TextMeshProUGUI>();
 
-                tempText.text = lines[i].Trim('\r');
+                tempText.text = fileLines[i].Trim('\r');
 
                 // grab the button component from temp
                 Button tempButton = temp.GetComponent<Button>();            
@@ -119,16 +125,16 @@ namespace Lym
 
             TextAsset templates = Resources.Load<TextAsset>("words/words " + category);
 
-            lines = templates.text.Split('\n');
+            fileLines = templates.text.Split('\n');
 
-            for(int i = 0; i < lines.Length; i++)
+            for(int i = 0; i < fileLines.Length; i++)
             {
                 GameObject temp = Instantiate(choiceButtonPrefab, wordsContainer);
 
                 // give the button label the text from 'lines'
                 TextMeshProUGUI tempText = temp.GetComponentInChildren<TextMeshProUGUI>();
 
-                tempText.text = lines[i].Trim('\r');
+                tempText.text = fileLines[i].Trim('\r');
 
                 // grab the button component from temp
                 Button tempButton = temp.GetComponent<Button>();
@@ -143,17 +149,17 @@ namespace Lym
         {
             // load a list of possible animations from text file
             TextAsset templates = Resources.Load<TextAsset>("gestures");
-            lines = templates.text.Split('\n');
+            fileLines = templates.text.Split('\n');
 
-            // loop over list and create button for each one
-            for(int i = 0; i < lines.Length; i++)
+            // loop over the animations list and create button for each one
+            for(int i = 0; i < fileLines.Length; i++)
             {
                 GameObject temp = Instantiate(choiceButtonPrefab, gestureContainer);
 
                 // give the button label the text from 'lines'
                 TextMeshProUGUI textRef = temp.GetComponentInChildren<TextMeshProUGUI>();
 
-                textRef.text = lines[i].Trim('\r');
+                textRef.text = fileLines[i].Trim('\r');
 
                 // grab the button component from temp
                 Button tempButton = temp.GetComponent<Button>();

@@ -91,8 +91,19 @@ namespace Lym
             CloseScreens();
             characterCustomizerUI.SetActive(true);
             characterCustomizationView.Init();
+            ActivateCharacterModel();
+        }
+
+        public void ActivateCharacterModel()
+        {
             modelsParent.SetActive(true);
             background.SetActive(false);
+        }
+
+        public void DeactivateCharacterModel()
+        {
+            modelsParent.SetActive(false);
+            background.SetActive(true);
         }
 
         public void MessageDisplayScreen(Message message)
@@ -115,8 +126,7 @@ namespace Lym
             messageEditorUI.SetActive(false);
 
             characterCustomizerUI.SetActive(false);
-            modelsParent.SetActive(false);
-            background.SetActive(true);
+            DeactivateCharacterModel();
         }
     }
 

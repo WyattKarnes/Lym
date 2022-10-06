@@ -158,11 +158,15 @@ namespace Lym
 
         #region Buttons
 
+        /// <summary>
+        /// Begins the asyc login process.
+        /// </summary>
         public void LoginButton()
         {
             StartCoroutine(Login(emailLoginField.text, passwordLoginField.text));
         }
 
+        // TODO: fully implement 
         public void LogoutButton()
         {
             auth.SignOut();
@@ -242,9 +246,9 @@ namespace Lym
         }
 
         /// <summary>
-        /// Get a list of all of the User's messages from the database
+        /// Get a list of all of the User's messages from the database.
+        /// Called when the Login function is complete.
         /// </summary>
-        /// <returns></returns>
         private void SetUpUser()
         {
             // Create the user object (this is just to keep a local reference so we can query the database less)

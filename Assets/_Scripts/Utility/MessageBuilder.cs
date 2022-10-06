@@ -96,6 +96,7 @@ namespace Lym {
 
                 case "g":
                     gesture = text;
+                    Debug.Log(gesture);
                     break;
             }       
 
