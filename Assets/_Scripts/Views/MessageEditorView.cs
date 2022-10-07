@@ -8,7 +8,7 @@ namespace Lym
     /// <summary>
     /// This script controls all aspects of the message editor, once it is open. 
     /// </summary>
-    public class MessageEditorView : MonoBehaviour
+    public class MessageEditorView : View
     {
         public static MessageEditorView instance;
 
@@ -39,6 +39,8 @@ namespace Lym
 
         [Header("Gesture UI References")]
         private User user;
+        public GameObject modelsParent;
+        public GameObject background;
         public GameObject maleModel;
         public GameObject femaleModel;
 
@@ -69,8 +71,10 @@ namespace Lym
         }
 
         // Activate or deactivate the correct character model 
-        public void init()
+        public override void Init()
         {
+            base.Init();
+
             user = FirebaseManager.instance.userData;
 
             // Make sure the display shows what the user has saved
@@ -84,6 +88,11 @@ namespace Lym
                 maleModel.SetActive(false);
                 femaleModel.SetActive(true);
             }
+        }
+
+        public override void Deinit()
+        {
+            base.Deinit();
         }
 
 
@@ -110,7 +119,7 @@ namespace Lym
                     words2Button.SetActive(false);
                     words2Label.SetActive(false);
 
-                    UIManager.instance.DeactivateCharacterModel();
+                    DeactivateCharacterModel();
                     break;
 
                 case 1:
@@ -127,7 +136,7 @@ namespace Lym
                     words2Button.SetActive(false);
                     words2Label.SetActive(false);
 
-                    UIManager.instance.ActivateCharacterModel();
+                    ActivateCharacterModel();
                     break;
 
                 case 2:
@@ -144,7 +153,7 @@ namespace Lym
                     words2Button.SetActive(true);
                     words2Label.SetActive(true);
 
-                    UIManager.instance.DeactivateCharacterModel();
+                    DeactivateCharacterModel();
                     break;
 
                 case 3:
@@ -161,7 +170,7 @@ namespace Lym
                     words2Button.SetActive(true);
                     words2Label.SetActive(true);
 
-                    UIManager.instance.ActivateCharacterModel();
+                    ActivateCharacterModel();
                     break;
             }
         }
@@ -291,6 +300,18 @@ namespace Lym
             CloseWordsOverlay();
             CloseGestureOverlay();
             CloseConfirmationOverlay();
+        }
+
+        private void ActivateCharacterModel()
+        {
+            modelsParent.SetActive(true);
+            background.SetActive(false);
+        }
+
+        private void DeactivateCharacterModel()
+        {
+            modelsParent.SetActive(false);
+            background.SetActive(true);
         }
 
     }

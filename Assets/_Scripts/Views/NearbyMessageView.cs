@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace Lym
 {
 
-    public class NearbyMessageView : MonoBehaviour
+    public class NearbyMessageView : View
     {
         public Transform messageList;
 
@@ -14,8 +14,14 @@ namespace Lym
 
         public List<Message> messages = new List<Message>();
 
-        public void Init()
+        //! Necessary because when a button is created it must be told what view to open. 
+        [SerializeField]
+        private MessageDisplayView messageDisplayView;
+
+        public override void Init()
         {
+            base.Init();
+
             // delete all message buttons that may have been added before
             ClearMessageView();
 
@@ -25,6 +31,11 @@ namespace Lym
 
             // tell the firebase manager to start GeoFire queries
             FirebaseManager.instance.BeginGeofireQuery();
+        }
+
+        public override void Deinit()
+        {
+            base.Deinit();
         }
 
         /// <summary>
@@ -68,7 +79,10 @@ namespace Lym
 
                 temp.GetComponent<Button>().onClick.AddListener(() =>
                 {
-                    UIManager.instance.MessageDisplayScreen(temp.GetComponent<MessageButton>().message);
+                    // Load the message display
+                    UIManager.instance.LoadView(messageDisplayView);
+                    // Tell the message display view what message to display
+                    messageDisplayView.LoadMessage(temp.GetComponent<MessageButton>().message);
                 });
 
 

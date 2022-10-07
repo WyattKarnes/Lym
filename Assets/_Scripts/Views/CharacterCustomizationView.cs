@@ -5,8 +5,14 @@ using UnityEngine;
 
 namespace Lym
 {
-    public class CharacterCustomizationView : MonoBehaviour
+    public class CharacterCustomizationView : View
     {
+
+        [SerializeField]
+        private GameObject modelsParent;
+
+        [SerializeField]
+        private GameObject background;
 
         [SerializeField]
         private GameObject maleModel;
@@ -15,8 +21,9 @@ namespace Lym
 
         private User user;
 
-        public void Init()
+        public override void Init()
         {
+            base.Init();
             user = FirebaseManager.instance.userData;
 
             // Make sure the display shows what the user has saved
@@ -29,6 +36,21 @@ namespace Lym
                 maleModel.SetActive(false);
                 femaleModel.SetActive(true);
             }
+
+            // enable character models
+            modelsParent.SetActive(true);
+            // disable background
+            background.SetActive(false);
+        }
+
+        public override void Deinit()
+        {
+            base.Init();
+
+            // disable character models
+            modelsParent.SetActive(false);
+            // enable background
+            background.SetActive(true);
         }
 
         public void SwapGender()

@@ -6,7 +6,7 @@ using TMPro;
 
 namespace Lym {
 
-    public class HomepageView : MonoBehaviour
+    public class HomepageView : View
     {
 
         public TextMeshProUGUI welcomeLabel;
@@ -16,11 +16,17 @@ namespace Lym {
 
         public ScrollRect scrollRect;
         
-        public void Init()
+        public override void Init()
         {
+            base.Init();
             SetWelcomeText();
             ClearMessageView();
             FetchMessages();
+        }
+
+        public override void Deinit()
+        {
+            base.Deinit();
         }
 
         private void SetWelcomeText()
@@ -60,6 +66,8 @@ namespace Lym {
             {
                 // spawn a message prefab
                 GameObject temp = Instantiate(messageListPrefab, messageList);
+
+                // TODO: Set the buttons up to do something when clicked?
 
                 // populate the pieces of the message prefab
                 temp.GetComponent<MessageButton>().Init(m);

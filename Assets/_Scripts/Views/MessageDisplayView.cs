@@ -2,11 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-
 namespace Lym
 {
 
-    public class MessageDisplayView : MonoBehaviour
+    public class MessageDisplayView : View
     {
 
         // Reference to the text display of the message
@@ -14,6 +13,12 @@ namespace Lym
         private TextMeshProUGUI display;
 
         // References to character parts
+        [SerializeField]
+        private GameObject modelsParent;
+
+        [SerializeField]
+        private GameObject background;        
+
         [SerializeField]
         private GameObject maleModel;
 
@@ -24,7 +29,27 @@ namespace Lym
         [SerializeField]
         private GestureList gestureList;
 
-        public void Init(Message message)
+        public override void Init()
+        {
+            base.Init();
+
+            // enable character models
+            modelsParent.SetActive(true);
+            // disable background
+            background.SetActive(false);
+        }
+
+        public override void Deinit()
+        {
+            base.Deinit();
+
+            // disable character models
+            modelsParent.SetActive(false);
+            // enable background
+            background.SetActive(true);
+        }
+
+        public void LoadMessage(Message message)
         {
             display.text = message.messageText;
 

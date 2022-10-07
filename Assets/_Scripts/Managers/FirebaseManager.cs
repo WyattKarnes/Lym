@@ -16,6 +16,9 @@ namespace Lym
     {
         public static FirebaseManager instance;
 
+        [SerializeField]
+        public View homepageView, loginView;
+
         // Firebase variables
         [Header("Firebase")]
         public DependencyStatus dependencyStatus;
@@ -170,7 +173,7 @@ namespace Lym
         public void LogoutButton()
         {
             auth.SignOut();
-            UIManager.instance.LoginScreen();
+            UIManager.instance.LoadView(loginView);
             //clear registration fields
             //clear login fields
         }
@@ -263,13 +266,13 @@ namespace Lym
                 LocalFilesManager.instance.LoadCharacter();
             } else
             {
-                Debug.Log("Character save not found. Creating placeholder.");
+                Debug.Log("Character save not found. Creating save directory and default character.");
                 LocalFilesManager.instance.SaveCharacter();
             }
 
             // Go to the home screen
-            UIManager.instance.UserHomepageScreen();
-
+            // UIManager.instance.UserHomepageScreen();
+            UIManager.instance.LoadView(homepageView);
         }
 
         private IEnumerator Register(string email, string password, string username)
@@ -289,7 +292,7 @@ namespace Lym
             else
             {
 
-                // Call the Firebase Auth signin function passing the email and password
+                // Call the Firebase Auth sign-in function passing the email and password
                 var RegisterTask = auth.CreateUserWithEmailAndPasswordAsync(email, password);
 
                 // Wait until the task is complete
@@ -358,7 +361,7 @@ namespace Lym
                         {
                             // The Username has been set
                             // Return to login screen
-                            UIManager.instance.LoginScreen();
+                            UIManager.instance.LoadView(loginView);
                             warningRegisterText.text = "";
                         }
                     }
