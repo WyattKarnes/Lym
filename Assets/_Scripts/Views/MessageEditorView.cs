@@ -38,9 +38,9 @@ namespace Lym
         public TextMeshProUGUI messageDisplay;
 
         [Header("Gesture UI References")]
-        private Character userCharacter;
-        public GameObject maleCharacter;
-        public GameObject femaleCharacter;
+        private User user;
+        public GameObject maleModel;
+        public GameObject femaleModel;
 
         // The button label to modify when a selection is made.
         private TextMeshProUGUI labelToChange;
@@ -65,8 +65,27 @@ namespace Lym
                 Destroy(this);
             }
 
-            userCharacter = FirebaseManager.instance.userData.character;
+            
         }
+
+        // Activate or deactivate the correct character model 
+        public void init()
+        {
+            user = FirebaseManager.instance.userData;
+
+            // Make sure the display shows what the user has saved
+            if (user.character.gender)
+            {
+                maleModel.SetActive(true);
+                femaleModel.SetActive(false);
+            }
+            else
+            {
+                maleModel.SetActive(false);
+                femaleModel.SetActive(true);
+            }
+        }
+
 
         /// <summary>
         /// Activates or deactivates the relevant GameObjects based on the chosen format of a message.
@@ -245,12 +264,16 @@ namespace Lym
 
             MessageBuilder.instance.UpdateMessage(label.text, choiceContext);
 
-            if (userCharacter.gender)
+
+
+            Debug.Log(user.character.gender);
+
+            if (user.character.gender)
             {
-                maleCharacter.GetComponent<Animator>().Play(label.text);
+                maleModel.GetComponent<Animator>().Play(label.text);
             } else
             {
-                femaleCharacter.GetComponent<Animator>().Play(label.text);
+                femaleModel.GetComponent<Animator>().Play(label.text);
             }
 
             CloseOverlays();

@@ -8,7 +8,7 @@ namespace Lym
     /// A data class to compile all of the information about a message.
     /// </summary>
     [System.Serializable]
-    public class Message : MonoBehaviour, IEquatable<Message>
+    public class Message : IEquatable<Message>
     {
         public string id;
 

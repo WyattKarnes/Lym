@@ -84,6 +84,7 @@ namespace Lym
         {
             CloseScreens();
             messageEditorUI.SetActive(true);
+            MessageEditorView.instance.init();
         }
 
         public void CharacterCustomizerScreen()

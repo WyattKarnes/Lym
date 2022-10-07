@@ -29,6 +29,11 @@ namespace Lym {
         private void Start()
         {
             path = Application.persistentDataPath + "/users/";
+
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
         }
 
         public bool CharacterSaveExists(User user)
