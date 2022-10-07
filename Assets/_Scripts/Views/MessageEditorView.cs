@@ -93,10 +93,12 @@ namespace Lym
         public override void Deinit()
         {
             base.Deinit();
+            DeactivateCharacterModel();
         }
 
 
         /// <summary>
+        /// Called from a dropdown in the scene.
         /// Activates or deactivates the relevant GameObjects based on the chosen format of a message.
         /// </summary>
         /// <param name="choice"></param>
@@ -175,6 +177,7 @@ namespace Lym
             }
         }
 
+        #region Overlay Handling
 
         public void OpenTemplateOverlay(TextMeshProUGUI label)
         {
@@ -239,6 +242,16 @@ namespace Lym
             confirmationOverlay.SetActive(false);
         }
 
+        public void CloseOverlays()
+        {
+            CloseTemplateOverlay();
+            CloseConjunctionOverlay();
+            CloseWordsOverlay();
+            CloseGestureOverlay();
+            CloseConfirmationOverlay();
+        }
+
+        #endregion
 
         /// <summary>
         /// Results in storing a string which will be used to tell the message builder what aspect 
@@ -250,6 +263,11 @@ namespace Lym
             choiceContext = context;
         }
 
+        /// <summary>
+        /// Used in the Message Dropdown Populator to give generated buttons
+        /// something to do.
+        /// </summary>
+        /// <param name="label"></param>
         public void UpdateLabel(TextMeshProUGUI label)
         {
             // update the text of the label to change
@@ -264,6 +282,10 @@ namespace Lym
             CloseOverlays();
         }
 
+        /// <summary>
+        /// Used in the Message Dropdown Populator to give generated buttons something to do.
+        /// </summary>
+        /// <param name="label"></param>
         public void UpdateGesture(TextMeshProUGUI label)
         {
 
@@ -288,20 +310,16 @@ namespace Lym
             CloseOverlays();
         }
 
+        /// <summary>
+        /// Used by the message builder utility to update the text on the confirmation message
+        /// </summary>
+        /// <param name="text"></param>
         public void UpdateMessageDisplay(string text)
         {
             messageDisplay.SetText(text);
         }
 
-        public void CloseOverlays()
-        {
-            CloseTemplateOverlay();
-            CloseConjunctionOverlay();
-            CloseWordsOverlay();
-            CloseGestureOverlay();
-            CloseConfirmationOverlay();
-        }
-
+     
         private void ActivateCharacterModel()
         {
             modelsParent.SetActive(true);
